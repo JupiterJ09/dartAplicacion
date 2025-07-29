@@ -30,6 +30,8 @@ dev_dependencies:
   # Herramienta para cambiar el ícono de la app
   flutter_launcher_icons: ^0.13.1
 
+  flutter_native_splash: ^2.4.0
+
 flutter:
 
   # Fuente de íconos de Material Design
