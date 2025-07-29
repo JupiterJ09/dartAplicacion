@@ -46,3 +46,12 @@ flutter_icons:
   android: true
   ios: false  # Cámbialo a true si también quieres cambiarlo en iOS
   image_path: "assets/icon/pines.png"
+
+# Esta parte es para el splash screen
+flutter_native_splash:
+  color: "#00C853" # Verde brillante, puedes usar otro (#FFFFFF blanco, etc.)
+  image: assets/icon/pines.png # Ruta de tu icono
+  android_gravity: center
+  ios_content_mode: center
+  fullscreen: true
+
