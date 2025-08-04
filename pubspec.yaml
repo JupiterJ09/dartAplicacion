@@ -19,6 +19,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.9.0
   rename: ^3.1.0
+  path_provider: ^2.1.1
 
 dev_dependencies:
   flutter_test:
@@ -47,11 +48,18 @@ flutter_icons:
   ios: false  # Cámbialo a true si también quieres cambiarlo en iOS
   image_path: "assets/icon/pines.png"
 
-# Esta parte es para el splash screen
 flutter_native_splash:
-  color: "#00C853" # Verde brillante, puedes usar otro (#FFFFFF blanco, etc.)
-  image: assets/icon/pines.png # Ruta de tu icono
+  color: "#FFFFFF"
+  image: assets/icon/pinesB.png
+  
   android_gravity: center
-  ios_content_mode: center
+  android_12:
+    image: assets/icon/pinesB.png
+    color: "#FFFFFF"
+  
+  # Probar con fill en lugar de center
+  ios_content_mode: scaleAspectFill
+  
+  web_image_mode: center
   fullscreen: true
 
