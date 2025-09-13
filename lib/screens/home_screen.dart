@@ -10,10 +10,13 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
+    final isLandscape = size.width > size.height;
     
-    return Scaffold(
-      backgroundColor: Colors.green[600],
-      body: SafeArea(
+    return Container(
+      color: Colors.green[600],
+      width: double.infinity,
+      height: size.height, // Altura completa de la pantalla
+      child: SafeArea(
         child: Column(
           children: [
             _buildStatusBar(),
@@ -24,7 +27,7 @@ class HomeScreen extends StatelessWidget {
                   isTablet ? 32 : 16,
                   isTablet ? 24 : 16,
                   isTablet ? 32 : 16,
-                  isTablet ? 32 : 24,
+                  isTablet ? 32 : 80, // Más espacio para la bottom navigation
                 ),
                 padding: EdgeInsets.all(isTablet ? 32 : 24),
                 decoration: BoxDecoration(
@@ -38,62 +41,64 @@ class HomeScreen extends StatelessWidget {
                         : (constraints.maxWidth - 16) / 2;
                     final cardHeight = isTablet ? 160.0 : 120.0;
                     
-                    return Column(
-                      children: [
-                        SizedBox(height: constraints.maxHeight * 0.08),
-                        
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildHomeCard(
-                              Icons.people, 
-                              '5', 
-                              Colors.green[100]!, 
-                              cardWidth,
-                              cardHeight,
-                              isTablet,
-                            ),
-                            _buildHomeCard(
-                              Icons.bed, 
-                              '1', 
-                              Colors.green[100]!, 
-                              cardWidth,
-                              cardHeight,
-                              isTablet,
-                            ),
-                          ],
-                        ),
-                        
-                        SizedBox(height: isTablet ? 32 : 24),
-                        
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildHomeCard(
-                              Icons.build, 
-                              '2', 
-                              Colors.green[100]!, 
-                              cardWidth,
-                              cardHeight,
-                              isTablet,
-                            ),
-                            _buildHomeCard(
-                              Icons.attach_money, 
-                              r'$1400', 
-                              Colors.green[100]!, 
-                              cardWidth,
-                              cardHeight,
-                              isTablet,
-                            ),
-                          ],
-                        ),
-                        
-                        Spacer(),
-                        
-                        _buildHistorialButton(isTablet),
-                        
-                        SizedBox(height: constraints.maxHeight * 0.05),
-                      ],
+                    return SingleChildScrollView( // Hace scrolleable el contenido
+                      child: Column(
+                        children: [
+                          SizedBox(height: isTablet ? 20 : 16),
+                          
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildHomeCard(
+                                Icons.people, 
+                                '5', 
+                                Colors.green[100]!, 
+                                cardWidth,
+                                cardHeight,
+                                isTablet,
+                              ),
+                              _buildHomeCard(
+                                Icons.bed, 
+                                '1', 
+                                Colors.green[100]!, 
+                                cardWidth,
+                                cardHeight,
+                                isTablet,
+                              ),
+                            ],
+                          ),
+                          
+                          SizedBox(height: isTablet ? 32 : 24),
+                          
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildHomeCard(
+                                Icons.build, 
+                                '2', 
+                                Colors.green[100]!, 
+                                cardWidth,
+                                cardHeight,
+                                isTablet,
+                              ),
+                              _buildHomeCard(
+                                Icons.attach_money, 
+                                r'$1400', 
+                                Colors.green[100]!, 
+                                cardWidth,
+                                cardHeight,
+                                isTablet,
+                              ),
+                            ],
+                          ),
+                          
+                          SizedBox(height: isTablet ? 40 : 32),
+                          
+                          _buildHistorialButton(isTablet),
+                          
+                          SizedBox(height: isTablet ? 32 : 24), // Espaciado final
+                        ],
+                      ),
                     );
                   },
                 ),

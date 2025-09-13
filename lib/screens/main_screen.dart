@@ -18,24 +18,50 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   String _currentSection = 'home';
-  
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        body: _getCurrentScreen(),
-        bottomNavigationBar: _buildBottomNav(),
-      ),
-    );
-  }
+
+@override
+Widget build(BuildContext context) {
+  return PopScope(
+    canPop: false,
+    onPopInvokedWithResult: (bool didPop, Object? result) async {
+      if (!didPop) {
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      }
+    },
+    child: Scaffold(
+      body: _getCurrentScreen(),
+      bottomNavigationBar: _buildBottomNav(),
+    ),
+  );
+}
 
   Future<bool> _onWillPop() async {
     if (_currentSection != 'home') {
       _navigateToSection('home');
       return false;
     }
-    return true;
+
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Salir'),
+            content: Text('¿Quieres salir de la app?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('si'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   Widget _getCurrentScreen() {
@@ -67,16 +93,19 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _currentSection = section;
       HapticFeedback.lightImpact();
-      
+
       switch (section) {
         case 'home':
           _currentIndex = 0;
           break;
         case 'en_uso':
+         _currentIndex = 1;
+         break;
         case 'libres':
+        _currentIndex = 2;
+        break;
         case 'mantenimiento':
         case 'historial':
-          _currentIndex = 1;
           break;
         default:
           break;
@@ -85,10 +114,15 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget? _buildBottomNav() {
-    if (['menu', 'configuracion', 'graficas', 'costos'].contains(_currentSection)) {
+    if ([
+      'menu',
+      'configuracion',
+      'graficas',
+      'costos',
+    ].contains(_currentSection)) {
       return null;
     }
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -108,7 +142,7 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               _buildBottomNavItem(Icons.home, 0, 'home'),
               _buildBottomNavItem(Icons.people, 1, 'en_uso'),
-              _buildBottomNavItem(Icons.car_rental, 2, 'libres'),
+              _buildBottomNavItem(Icons.meeting_room_outlined, 2, 'libres'),
               _buildBottomNavItem(Icons.settings, 3, 'menu'),
             ],
           ),
@@ -119,7 +153,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildBottomNavItem(IconData icon, int index, String section) {
     bool isSelected = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () => _navigateToSection(section),
       child: Container(
@@ -128,10 +162,14 @@ class _MainScreenState extends State<MainScreen> {
           color: isSelected ? Colors.green[100] : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icon,
-          color: isSelected ? Colors.green[700] : Colors.grey[600],
-          size: 24,
+
+        child: Transform.scale(
+          scale: isSelected ? 1.1 : 1.0, // 10% más grande si está seleccionado
+          child: Icon(
+            icon,
+            color: isSelected ? Colors.green[700] : Colors.grey[600],
+            size: 24,
+          ),
         ),
       ),
     );
