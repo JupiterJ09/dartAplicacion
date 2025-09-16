@@ -13,6 +13,11 @@ class _RegistroScreenState extends State<RegistroScreen> {
 //final _formKey = GlobalKey<FormState>();
 
 //final _cuartoController = TextEditingController();
+//final _tipoCuartoController = TextEditingController();
+//final _fechaRegistroController = TextEditingController();
+//final _horaRegistroController = TextEditingController();
+//final _costoTotalController = TextEditingController();
+//final _cantidadDiasController = TextEditingController();
 
 
 

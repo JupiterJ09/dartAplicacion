@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart';
 
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final Function(String) onNavigate;
 
   const HomeScreen({Key? key, required this.onNavigate}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +25,6 @@ class HomeScreen extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-
             Expanded(
               child: Container(
                 // Márgenes iguales en todos los lados
@@ -35,75 +41,93 @@ class HomeScreen extends StatelessWidget {
                         : (constraints.maxWidth - 16) / 2;
                     final cardHeight = isTablet ? 160.0 : 120.0;
                     
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          SizedBox(height: isTablet ? 20 : 16),
-                          
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    return FutureBuilder<Map<String, dynamic>>(
+                      future: _getResumenDatos(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                        
+                        final datos = snapshot.data ?? {
+                          'en_uso': 0,
+                          'libres': 0,
+                          'mantenimiento': 0,
+                          'ingresos_hoy': 0.0,
+                        };
+                        
+                        return SingleChildScrollView(
+                          child: Column(
                             children: [
-                              _buildHomeCard(Icons.people,
-                               '5',
-                                Colors.green[100]!, 
-                                cardWidth, 
-                                cardHeight, 
-                                isTablet, 
-                              () => onNavigate('en_uso')),
+                              SizedBox(height: isTablet ? 20 : 16),
+                              
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildHomeCard(
+                                    Icons.people,
+                                    'En uso: ${datos['en_uso']}',
+                                    Colors.green[100]!, 
+                                    cardWidth, 
+                                    cardHeight, 
+                                    isTablet, 
+                                    () => widget.onNavigate('en_uso')
+                                  ),
 
-                              _buildHomeCard(
-                                Icons.bed, 
-                                '1', 
-                                Colors.green[100]!, 
-                                cardWidth,
-                                cardHeight,
-                                isTablet,
-                                () => onNavigate('libres')
+                                  _buildHomeCard(
+                                    Icons.bed, 
+                                    'Libres: ${datos['libres']}', 
+                                    Colors.green[100]!, 
+                                    cardWidth,
+                                    cardHeight,
+                                    isTablet,
+                                    () => widget.onNavigate('libres')
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          
-                          SizedBox(height: isTablet ? 32 : 24),
-                          
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildHomeCard(
-                                Icons.build, 
-                                '2', 
-                                Colors.green[100]!, 
-                                cardWidth,
-                                cardHeight,
-                                isTablet,
-                                () => onNavigate('mantenimiento')
+                              
+                              SizedBox(height: isTablet ? 32 : 24),
+                              
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildHomeCard(
+                                    Icons.build, 
+                                    'Mantenimiento: ${datos['mantenimiento']}', 
+                                    Colors.green[100]!, 
+                                    cardWidth,
+                                    cardHeight,
+                                    isTablet,
+                                    () => widget.onNavigate('mantenimiento')
+                                  ),
+                                  _buildHomeCard(
+                                    Icons.attach_money, 
+                                    'Ingresos hoy: \$${datos['ingresos_hoy'].toStringAsFixed(0)}', 
+                                    Colors.green[100]!, 
+                                    cardWidth,
+                                    cardHeight,
+                                    isTablet,
+                                    () => widget.onNavigate('graficas')
+                                  ),
+                                ],
                               ),
+                              
+                              SizedBox(height: isTablet ? 40 : 32),
+                              
                               _buildHomeCard(
-                                Icons.attach_money, 
-                                r'$1400', 
-                                Colors.green[100]!, 
-                                cardWidth,
-                                cardHeight,
-                                isTablet,
-                                () => onNavigate('graficas')
-                              ),
-                            ],
-                          ),
-                          
-                          SizedBox(height: isTablet ? 40 : 32),
-                          
-                          _buildHomeCard(
                                 Icons.history, 
-                                r'$1400', 
+                                'Historial', 
                                 Colors.green[100]!, 
                                 double.infinity,
                                 cardHeight,
                                 isTablet,
-                                () => onNavigate('historial')
+                                () => widget.onNavigate('historial')
                               ),
-                          
-                          SizedBox(height: isTablet ? 32 : 24),
-                        ],
-                      ),
+                              
+                              SizedBox(height: isTablet ? 32 : 24),
+                            ],
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -115,62 +139,110 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Future<Map<String, dynamic>> _getResumenDatos() async {
+    final db = await _dbHelper.database;
+    
+    // Contar cuartos por estado
+    final estadoCuartos = await db.rawQuery('''
+      SELECT estado, COUNT(*) as cantidad
+      FROM cuartos 
+      GROUP BY estado
+    ''');
+    
+    // Obtener ingresos de hoy
+    final ingresosHoy = await db.rawQuery('''
+      SELECT total_ingresos
+      FROM ingresos_diarios 
+      WHERE fecha = date('now')
+    ''');
+    
+    int enUso = 0;
+    int libres = 0;
+    int mantenimiento = 0;
+    
+    for (var estado in estadoCuartos) {
+      final cantidad = (estado['cantidad'] as num).toInt();
+      switch (estado['estado']) {
+        case 'ocupado':
+          enUso = cantidad;
+          break;
+        case 'disponible':
+          libres = cantidad;
+          break;
+        case 'mantenimiento':
+          mantenimiento = cantidad;
+          break;
+      }
+    }
+    
+    final ingresosDiarios = ingresosHoy.isNotEmpty 
+        ? (ingresosHoy[0]['total_ingresos'] as num).toDouble()
+        : 0.0;
+    
+    return {
+      'en_uso': enUso,
+      'libres': libres,
+      'mantenimiento': mantenimiento,
+      'ingresos_hoy': ingresosDiarios,
+    };
+  }
 
-Widget _buildHomeCard(
-  IconData icon, 
-  String text, 
-  Color color, 
-  double width, 
-  double height, 
-  bool isTablet,
-  VoidCallback? onTap,
-) {
-  return Container(
-    width: width,
-    height: height,
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-          offset: Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Material(                     
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+  Widget _buildHomeCard(
+    IconData icon, 
+    String text, 
+    Color color, 
+    double width, 
+    double height, 
+    bool isTablet,
+    VoidCallback? onTap,
+  ) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
         borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-        child: Container(
-          width: width,
-          height: height,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon, 
-                size: isTablet ? 40 : 32, 
-                color: Colors.green[700],
-              ),
-              SizedBox(height: isTablet ? 12 : 8),
-              FittedBox(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: isTablet ? 24 : 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(                     
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
+          child: Container(
+            width: width,
+            height: height,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon, 
+                  size: isTablet ? 40 : 32, 
+                  color: Colors.green[700],
+                ),
+                SizedBox(height: isTablet ? 12 : 8),
+                FittedBox(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: isTablet ? 16 : 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[700],
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
