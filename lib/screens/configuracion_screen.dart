@@ -23,34 +23,36 @@ class ConfiguracionScreen extends StatelessWidget {
             children: [
               buildHeader('Configuración', context, isTablet, () => onNavigate('menu')),
               Expanded(
-                child: Container(
-                  margin: EdgeInsets.all(isTablet ? 24 : 16),
-                  padding: EdgeInsets.all(isTablet ? 32 : 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(isTablet ? 32 : 20),
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final cardSize = isTablet 
-                          ? constraints.maxWidth * 0.35 
-                          : constraints.maxWidth * 0.4;
-                      
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildConfigCard(Icons.bedroom_parent_outlined, Colors.green[100]!, cardSize, isTablet),
-                              _buildConfigCard(Icons.single_bed_outlined, Colors.green[100]!, cardSize, isTablet),
-                            ],
-                          ),
-                          SizedBox(height: isTablet ? 40 : 32),
-                          _buildConfigCard(Icons.attach_money, Colors.green[100]!, cardSize * 2.2, isTablet),
-                        ],
-                      );
-                    },
+                child: SingleChildScrollView(
+                  child: Container(
+                    margin: EdgeInsets.all(isTablet ? 24 : 16),
+                    padding: EdgeInsets.all(isTablet ? 32 : 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(isTablet ? 32 : 20),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final cardSize = isTablet 
+                            ? constraints.maxWidth * 0.35 
+                            : constraints.maxWidth * 0.4;
+                        
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildConfigCard(Icons.bedroom_parent_outlined, Colors.green[100]!, cardSize, isTablet),
+                                _buildConfigCard(Icons.single_bed_outlined, Colors.green[100]!, cardSize, isTablet),
+                              ],
+                            ),
+                            SizedBox(height: isTablet ? 40 : 32),
+                            _buildConfigCard(Icons.attach_money, Colors.green[100]!, cardSize * 2.2, isTablet),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/common_widgets.dart';
 
 class HistorialScreen extends StatelessWidget {
   final Function(String) onNavigate;
@@ -16,7 +15,6 @@ class HistorialScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            buildHeaderWithTabs('Historial', context, isTablet, onNavigate),
             
             Container(
               margin: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),

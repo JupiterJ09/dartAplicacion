@@ -16,7 +16,7 @@ class EnUsoScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            buildHeaderWithTabs('En uso', context, isTablet, onNavigate),
+            
             Expanded(
               child: Container(
                 margin: EdgeInsets.all(isTablet ? 24 : 16),

@@ -34,51 +34,7 @@ Widget buildHeader(String title, BuildContext context, bool isTablet, VoidCallba
   );
 }
 
-// Widget para headers con tabs de navegación
-Widget buildHeaderWithTabs(String currentTitle, BuildContext context, bool isTablet, Function(String) onNavigate) {
-  return Container(
-    padding: EdgeInsets.symmetric(
-      horizontal: isTablet ? 24 : 16,
-      vertical: isTablet ? 20 : 16,
-    ),
-    child: Row(
-      children: [
-        GestureDetector(
-          onTap: () => onNavigate('menu'),
-          child: Icon(
-            Icons.menu,
-            color: Colors.white,
-            size: isTablet ? 32 : 28,
-          ),
-        ),
-        Spacer(),
-        Container(
-          height: isTablet ? 48 : 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              buildMenuTab('home', 'home', currentTitle == 'home', isTablet, onNavigate),
-              buildMenuTab('En uso', 'en_uso', currentTitle == 'En uso', isTablet, onNavigate),
-              buildMenuTab('Libres', 'libres', currentTitle == 'Libres', isTablet, onNavigate),
-              buildMenuTab('Mantenimiento', 'mantenimiento', currentTitle == 'Mantenimiento', isTablet, onNavigate),
-              buildMenuTab('Historial', 'historial', currentTitle == 'Historial', isTablet, onNavigate),
-            ],
-          ),
-        ),
-        Spacer(),
-        Icon(
-          Icons.arrow_forward_ios,
-          color: Colors.yellow,
-          size: isTablet ? 28 : 24,
-        ),
-      ],
-    ),
-  );
-}
+
 
 // Widget para botones de tabs del menú
 Widget buildMenuTab(String label, String section, bool isActive, bool isTablet, Function(String) onNavigate) {

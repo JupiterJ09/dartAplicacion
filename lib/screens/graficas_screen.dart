@@ -13,7 +13,7 @@ class GraficasScreen extends StatelessWidget {
     
     return WillPopScope(
       onWillPop: () async {
-        onNavigate('menu');
+        onNavigate('home');
         return false;
       },
       child: Scaffold(

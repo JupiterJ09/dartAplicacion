@@ -16,7 +16,6 @@ class LibresScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            buildHeaderWithTabs('Libres', context, isTablet, onNavigate),
             Expanded(
               child: Container(
                 margin: EdgeInsets.all(isTablet ? 24 : 16),
