@@ -12,12 +12,12 @@ class HistorialScreen extends StatefulWidget {
 
 class _HistorialScreenState extends State<HistorialScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    
+
     return Scaffold(
       backgroundColor: Colors.green[600],
       body: SafeArea(
@@ -60,7 +60,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 ],
               ),
             ),
-            
+
             // Estadísticas rápidas
             Container(
               margin: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),
@@ -102,9 +102,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 },
               ),
             ),
-            
+
             SizedBox(height: isTablet ? 16 : 12),
-            
+
             // Tabla Header
             Container(
               margin: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),
@@ -169,7 +169,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 ],
               ),
             ),
-            
+
             // Lista de solicitudes
             Expanded(
               child: Container(
@@ -190,11 +190,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   future: _getSolicitudesTerminadas(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
-                    
+
                     if (snapshot.hasError) {
                       return Center(
                         child: Column(
@@ -226,9 +224,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         ),
                       );
                     }
-                    
+
                     final solicitudes = snapshot.data ?? [];
-                    
+
                     if (solicitudes.isEmpty) {
                       return Center(
                         child: Column(
@@ -261,7 +259,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         ),
                       );
                     }
-                    
+
                     return ListView.builder(
                       padding: EdgeInsets.zero,
                       itemCount: solicitudes.length,
@@ -280,14 +278,15 @@ class _HistorialScreenState extends State<HistorialScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, bool isTablet) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon,
+    bool isTablet,
+  ) {
     return Column(
       children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: isTablet ? 24 : 20,
-        ),
+        Icon(icon, color: Colors.white, size: isTablet ? 24 : 20),
         SizedBox(height: 4),
         Text(
           value,
@@ -299,41 +298,45 @@ class _HistorialScreenState extends State<HistorialScreen> {
         ),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: isTablet ? 12 : 10,
-          ),
+          style: TextStyle(color: Colors.white70, fontSize: isTablet ? 12 : 10),
           textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildHistorialRow(Map<String, dynamic> solicitud, int index, bool isTablet) {
+  Widget _buildHistorialRow(
+    Map<String, dynamic> solicitud,
+    int index,
+    bool isTablet,
+  ) {
     final numero = solicitud['numero']?.toString() ?? 'S/N';
     final tipo = solicitud['tipo_habitacion']?.toString() ?? 'Cuarto';
-    final ingresoTotal = (solicitud['ingreso_total'] as num?)?.toDouble() ?? 0.0;
+    final ingresoTotal =
+        (solicitud['ingreso_total'] as num?)?.toDouble() ?? 0.0;
     final fechaSolicitud = solicitud['fecha_solicitud']?.toString() ?? '';
     final modalidad = solicitud['modalidad_pago']?.toString() ?? '';
     final horas = solicitud['horas_totales'] as int?;
     final dias = solicitud['dias_totales'] as int?;
-    
+
     // Formatear fecha y hora
     String fechaFormateada = '';
     String horaFormateada = '';
     String duracionFormateada = '';
-    
+
     if (fechaSolicitud.isNotEmpty) {
       try {
         final fecha = DateTime.parse(fechaSolicitud);
-        fechaFormateada = '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}';
-        horaFormateada = '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}';
+        fechaFormateada =
+            '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}';
+        horaFormateada =
+            '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}';
       } catch (e) {
         fechaFormateada = '--/--';
         horaFormateada = '--:--';
       }
     }
-    
+
     // Formatear duración
     if (modalidad == 'por_hora' && horas != null) {
       duracionFormateada = '${horas}h';
@@ -350,16 +353,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
     } else {
       duracionFormateada = modalidad.replaceAll('_', ' ');
     }
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color: index % 2 == 0 ? Colors.green[50] : Colors.white,
         border: Border(
-          bottom: BorderSide(
-            color: Colors.grey[200]!,
-            width: 0.5,
-          ),
+          bottom: BorderSide(color: Colors.grey[200]!, width: 0.5),
         ),
       ),
       child: Row(
@@ -432,42 +432,42 @@ class _HistorialScreenState extends State<HistorialScreen> {
       ),
     );
   }
-  
+
   Future<List<Map<String, dynamic>>> _getSolicitudesTerminadas() async {
     try {
       final db = await _dbHelper.database;
-      
+
       final result = await db.rawQuery('''
-        SELECT 
-          s.id,
-          s.cuarto_id,
-          s.modalidad_pago,
-          s.precio_aplicado,
-          s.horas_totales,
-          s.dias_totales,
-          s.ingreso_total,
-          s.fecha_inicio,
-          s.fecha_fin,
-          s.fecha_solicitud,
-          s.estado,
-          c.numero,
-          c.tipo_habitacion
-        FROM solicitudes s
-        JOIN cuartos c ON s.cuarto_id = c.id
-        WHERE s.estado = 'finalizada'
-        ORDER BY s.fecha_solicitud DESC
+              SELECT 
+        s.id,
+        s.cuarto_id,
+        s.modalidad_pago,
+        s.precio_aplicado,
+        s.horas_totales,
+        s.dias_totales,
+        s.ingreso_total,
+        s.fecha_inicio,
+        s.fecha_fin,
+        s.fecha_solicitud,
+        s.estado,
+        c.numero,
+        c.tipo_habitacion
+      FROM solicitudes s
+      JOIN cuartos c ON s.cuarto_id = c.id
+      WHERE s.estado = 'finalizada'
+      ORDER BY s.fecha_solicitud DESC;
       ''');
-      
+
       return result;
     } catch (e) {
       rethrow;
     }
   }
-  
+
   Future<Map<String, dynamic>> _getEstadisticasRapidas() async {
     try {
       final db = await _dbHelper.database;
-      
+
       final result = await db.rawQuery('''
         SELECT 
           COUNT(*) as total,
@@ -476,18 +476,14 @@ class _HistorialScreenState extends State<HistorialScreen> {
         FROM solicitudes
         WHERE estado = 'finalizada'
       ''');
-      
+
       return {
         'total': (result[0]['total'] as num).toInt(),
         'ingresos': (result[0]['ingresos'] as num).toDouble(),
         'promedio': (result[0]['promedio'] as num).toDouble(),
       };
     } catch (e) {
-      return {
-        'total': 0,
-        'ingresos': 0.0,
-        'promedio': 0.0,
-      };
+      return {'total': 0, 'ingresos': 0.0, 'promedio': 0.0};
     }
   }
 }

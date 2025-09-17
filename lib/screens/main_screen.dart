@@ -9,7 +9,7 @@ import 'mantenimiento_screen.dart';
 import 'historial_screen.dart';
 import 'registro_habitacion.dart'; 
 import 'lista_gastos_screen.dart';
-import 'package:flutter/services.dart'; // para SystemNavigator
+import 'package:flutter/services.dart'; 
 
 class MainScreen extends StatefulWidget {
   @override

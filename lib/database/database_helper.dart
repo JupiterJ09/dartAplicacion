@@ -143,10 +143,6 @@ class DatabaseHelper {
     // Cuartos con precios diferenciados
     final cuartos = [
       {'numero': '1', 'tipo': 'cuarto', 'precio_hora': 50.0, 'precio_dia': 400.0, 'estado': 'ocupado'},
-      {'numero': '2', 'tipo': 'cuarto', 'precio_hora': 50.0, 'precio_dia': 400.0, 'estado': 'disponible'},
-      {'numero': '3', 'tipo': 'cuarto', 'precio_hora': 55.0, 'precio_dia': 450.0, 'estado': 'disponible'},
-      {'numero': '4', 'tipo': 'cabaña', 'precio_hora': 80.0, 'precio_dia': 600.0, 'estado': 'disponible'},
-      {'numero': '5', 'tipo': 'cabaña', 'precio_hora': 85.0, 'precio_dia': 650.0, 'estado': 'mantenimiento'},
     ];
 
     for (var cuarto in cuartos) {
@@ -161,12 +157,6 @@ class DatabaseHelper {
         cuarto['estado']
       ]);
     }
-
-    // Solicitudes de ejemplo
-    await db.execute('''
-      INSERT INTO solicitudes (cuarto_id, modalidad_pago, precio_aplicado, horas_totales, ingreso_total, fecha_inicio, estado) 
-      VALUES (1, 'por_hora', 50.0, 3, 150.0, datetime('now', '-2 hours'), 'activa')
-    ''');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -515,6 +505,8 @@ class DatabaseHelper {
     ''');
   }
 
+  
+ 
   Future<List<Map<String, dynamic>>> getCuartosDisponibles() async {
     final db = await database;
     return await db.query(

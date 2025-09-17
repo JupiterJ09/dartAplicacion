@@ -166,10 +166,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Contar cuartos por estado
     final estadoCuartos = await db.rawQuery('''
-  SELECT estado, COUNT(*) as cantidad
-  FROM cuartos 
-  GROUP BY estado
-''');
+    SELECT estado, COUNT(*) as cantidad
+    FROM cuartos 
+    GROUP BY estado
+  ''');
 
     // Obtener ingresos de hoy
     final ingresosHoy = await db.rawQuery('''

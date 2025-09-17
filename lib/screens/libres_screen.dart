@@ -39,7 +39,7 @@ class _LibresScreenState extends State<LibresScreen> {
                   ),
                   SizedBox(width: isTablet ? 16 : 8),
                   Text(
-                    'Cuartos Disponibles',
+                    'Disponibles',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: isTablet ? 28 : 20,
@@ -48,7 +48,7 @@ class _LibresScreenState extends State<LibresScreen> {
                   ),
                   Spacer(),
                   IconButton(
-                    // ← NUEVO: Botón para gestionar cuartos
+                   
                     onPressed: () => widget.onNavigate('registro'),
                     icon: Icon(
                       Icons.add,

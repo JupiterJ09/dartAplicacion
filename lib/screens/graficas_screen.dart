@@ -53,9 +53,7 @@ class _GraficasScreenState extends State<GraficasScreen> {
                               ),
                             ),
                           ),
-                          
-                          
-                          
+
                           Text(
                             'Ver por:',
                             style: TextStyle(
@@ -97,6 +95,9 @@ class _GraficasScreenState extends State<GraficasScreen> {
                             }
 
                             if (snapshot.hasError) {
+                              print(
+                                'Error en gráficas: ${snapshot.error}',
+                              ); // Debug
                               return Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -110,6 +111,15 @@ class _GraficasScreenState extends State<GraficasScreen> {
                                     Text(
                                       'Error al cargar datos',
                                       style: TextStyle(color: Colors.red[600]),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Es posible que necesites agregar algunos datos primero',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ],
                                 ),
@@ -135,6 +145,15 @@ class _GraficasScreenState extends State<GraficasScreen> {
                                         fontSize: isTablet ? 18 : 16,
                                         color: Colors.grey[600],
                                       ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Agrega algunas solicitudes o gastos para ver las gráficas',
+                                      style: TextStyle(
+                                        fontSize: isTablet ? 14 : 12,
+                                        color: Colors.grey[500],
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ],
                                 ),
@@ -193,125 +212,126 @@ class _GraficasScreenState extends State<GraficasScreen> {
     );
   }
 
-  Widget _buildIngresosChart(List<Map<String, dynamic>> datos, bool isTablet) {
-    // Encontrar el valor máximo para normalizar las barras
-    final maxIngreso = datos.fold<double>(0.0, (max, item) {
-      final ingreso = (item['ingreso'] as num?)?.toDouble() ?? 0.0;
-      return ingreso.abs() > max ? ingreso.abs() : max;
-    });
+ Widget _buildIngresosChart(List<Map<String, dynamic>> datos, bool isTablet) {
+  final maxIngreso = datos.fold<double>(0.0, (max, item) {
+    final ingreso = (item['ingreso'] as num?)?.toDouble() ?? 0.0;
+    return ingreso.abs() > max ? ingreso.abs() : max;
+  });
 
-    final chartHeight = isTablet ? 300.0 : 250.0;
+  final chartHeight = isTablet ? 300.0 : 250.0;
 
-    return Container(
-      height: chartHeight,
-      child: Column(
-        children: [
-          // Gráfica principal
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(isTablet ? 20 : 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-                border: Border.all(color: Colors.grey[200]!),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: datos.map((item) {
-                  final ingreso = (item['ingreso'] as num?)?.toDouble() ?? 0.0;
-                  final barHeight = maxIngreso > 0
-                      ? (ingreso.abs() / maxIngreso) * (chartHeight - 120)
-                      : 10.0;
-                  return _buildIngresoBar(barHeight, ingreso, isTablet);
-                }).toList(),
-              ),
+  return Container(
+    height: chartHeight,
+    child: Column(
+      children: [
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.all(isTablet ? 20 : 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
+              border: Border.all(color: Colors.grey[200]!),
             ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Etiquetas
-          Container(
-            height: 40,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: datos.map((item) {
+                final ingreso = (item['ingreso'] as num?)?.toDouble() ?? 0.0;
+                final barHeight = maxIngreso > 0
+                    ? (ingreso.abs() / maxIngreso) * (chartHeight - 120)
+                    : 10.0;
                 return Expanded(
-                  child: Text(
-                    item['label'] ?? '',
-                    style: TextStyle(
-                      fontSize: isTablet ? 12 : 10,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                  ),
+                  child: _buildIngresoBar(barHeight, ingreso, isTablet),
                 );
               }).toList(),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIngresoBar(double height, double valor, bool isTablet) {
-    final isNegative = valor < 0;
-    
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        // Valor encima de la barra
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          decoration: BoxDecoration(
-            color: isNegative ? Colors.red[600] : Colors.green[600],
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            '\$${valor.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontSize: isTablet ? 11 : 9,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
         ),
-
-        SizedBox(height: 8),
-
-        // Barra
+        SizedBox(height: 16),
         Container(
-          width: isTablet ? 60 : 45,
-          height: height.clamp(10.0, double.infinity),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: isNegative 
-                ? [Colors.red[400]!, Colors.red[600]!]
-                : [Colors.green[400]!, Colors.green[600]!],
-            ),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(isTablet ? 8 : 6),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: (isNegative ? Colors.red : Colors.green).withOpacity(0.3),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
+          height: 40,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: datos.map((item) {
+              return Expanded(
+                child: Text(
+                  item['label'] ?? '',
+                  style: TextStyle(
+                    fontSize: isTablet ? 12 : 10,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
+
+// El widget que construye la barra de ingresos
+Widget _buildIngresoBar(double height, double valor, bool isTablet) {
+  final isNegative = valor < 0;
+
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.end,
+    children: [
+      // Valor encima de la barra
+      Container(
+        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: isNegative ? Colors.red[600] : Colors.green[600],
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          '\$${valor.toStringAsFixed(0)}',
+          style: TextStyle(
+            fontSize: isTablet ? 11 : 9,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      SizedBox(height: 8),
+      // Barra
+      Container(
+        // Eliminamos el 'width' para que se ajuste automáticamente.
+        // Ahora el ancho lo gestiona el Expanded padre
+        height: height.clamp(10.0, double.infinity),
+        width: 20, // Agregamos un ancho fijo mínimo para evitar que desaparezca
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: isNegative
+                ? [Colors.red[400]!, Colors.red[600]!]
+                : [Colors.green[400]!, Colors.green[600]!],
+          ),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(isTablet ? 8 : 6),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (isNegative ? Colors.red : Colors.green).withOpacity(
+                0.3,
+              ),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
 
   Widget _buildResumen() {
     return FutureBuilder<double>(
+      key: ValueKey(_filtroSeleccionado), // ✅ Esto fuerza la actualización
       future: _getTotalIngresos(),
       builder: (context, snapshot) {
         final total = snapshot.data ?? 0.0;
@@ -322,13 +342,17 @@ class _GraficasScreenState extends State<GraficasScreen> {
           decoration: BoxDecoration(
             color: isNegative ? Colors.red[50] : Colors.green[50],
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isNegative ? Colors.red[200]! : Colors.green[200]!),
+            border: Border.all(
+              color: isNegative ? Colors.red[200]! : Colors.green[200]!,
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isNegative ? 'Pérdida ${_filtroSeleccionado}:' : 'Ganancia ${_filtroSeleccionado}:',
+                isNegative
+                    ? 'Pérdida ${_filtroSeleccionado}:'
+                    : 'Ganancia ${_filtroSeleccionado}:',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -350,149 +374,290 @@ class _GraficasScreenState extends State<GraficasScreen> {
     );
   }
 
+  // Función auxiliar para verificar si una tabla existe
+  Future<bool> _tableExists(String tableName) async {
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.rawQuery("""
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='$tableName'
+      """);
+      return result.isNotEmpty;
+    } catch (e) {
+      print('Error verificando tabla $tableName: $e');
+      return false;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> _getIngresosDatos() async {
-    final db = await _dbHelper.database;
-    List<Map<String, dynamic>> ingresosDatos = [];
+    try {
+      final db = await _dbHelper.database;
+      List<Map<String, dynamic>> ingresosDatos = [];
 
-    switch (_filtroSeleccionado) {
-      case 'Dia':
-        // Obtener ingresos diarios
-        final ingresosQuery = await db.rawQuery('''
-          SELECT 
-            date(fecha_solicitud) as fecha,
-            COALESCE(SUM(ingreso_total), 0) as ingresos
-          FROM solicitudes 
-          WHERE date(fecha_solicitud) >= date('now', '-6 days')
-          AND estado = 'finalizada'
-        ''');
+      switch (_filtroSeleccionado) {
+        case 'Dia':
+          try {
+            bool solicitudesExists = await _tableExists('solicitudes');
+            bool gastosExists = await _tableExists('gastos');
 
-        // Crear mapa de ingresos por fecha
-        Map<String, double> ingresosPorFecha = {};
-        for (var ingreso in ingresosQuery) {
-          ingresosPorFecha[ingreso['fecha'] as String] = (ingreso['ingresos'] as num).toDouble();
-        }
+            Map<String, double> ingresosPorFecha = {};
+            Map<String, double> gastosPorFecha = {};
 
-        // Obtener gastos diarios
-        final gastosQuery = await db.rawQuery('''
-          SELECT fecha, COALESCE(SUM(monto), 0) as gastos
-          FROM gastos 
-          WHERE fecha >= date('now', '-6 days')
-          GROUP BY fecha
-        ''');
+            if (solicitudesExists) {
+              // CAMBIO CLAVE: Incluir TODAS las solicitudes, no solo las finalizadas
+              final ingresosQuery = await db.rawQuery('''
+        SELECT 
+          date(fecha_solicitud) as fecha,
+          COALESCE(SUM(ingreso_total), 0) as ingresos,
+          COUNT(*) as cantidad
+        FROM solicitudes 
+        WHERE date(fecha_solicitud) >= date('now', '-6 days')
+        GROUP BY date(fecha_solicitud)
+        ORDER BY fecha DESC
+      ''');
 
-        // Crear mapa de gastos por fecha
-        Map<String, double> gastosPorFecha = {};
-        for (var gasto in gastosQuery) {
-          gastosPorFecha[gasto['fecha'] as String] = (gasto['gastos'] as num).toDouble();
-        }
+             
+              for (var ingreso in ingresosQuery) {
+                ingresosPorFecha[ingreso['fecha'] as String] =
+                    (ingreso['ingresos'] as num).toDouble();
+              }
+            }
 
-        // Generar últimos 7 días
-        for (int i = 6; i >= 0; i--) {
-          final fecha = DateTime.now().subtract(Duration(days: i));
-          final fechaStr = "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
-          final ingresos = ingresosPorFecha[fechaStr] ?? 0.0;
-          final gastos = gastosPorFecha[fechaStr] ?? 0.0;
-          
-          ingresosDatos.add({
-            'label': '${fecha.day}/${fecha.month}',
-            'ingreso': ingresos - gastos,
-          });
-        }
-        break;
+            if (gastosExists) {
+              final gastosQuery = await db.rawQuery('''
+        SELECT fecha, COALESCE(SUM(monto), 0) as gastos
+        FROM gastos 
+        WHERE fecha >= date('now', '-6 days')
+        GROUP BY fecha
+        ORDER BY fecha DESC
+      ''');
 
-      case 'Semana':
-        try {
-          final semanas = await _dbHelper.getIngresosSemanales(ultimasSemanas: 6);
-          
-          for (var semana in semanas) {
-            final fechaInicio = semana['fecha_inicio']?.toString() ?? '';
-            final fechaFin = semana['fecha_fin']?.toString() ?? '';
-            
-            if (fechaInicio.isNotEmpty && fechaFin.isNotEmpty) {
-              final gastosSemanales = await db.rawQuery('''
-                SELECT COALESCE(SUM(monto), 0) as total_gastos
-                FROM gastos 
-                WHERE fecha BETWEEN ? AND ?
-              ''', [fechaInicio, fechaFin]);
-              
-              final gastos = (gastosSemanales.isNotEmpty && gastosSemanales[0]['total_gastos'] != null) 
-                  ? (gastosSemanales[0]['total_gastos'] as num).toDouble() 
-                  : 0.0;
-              final ingresos = (semana['total_ingresos'] != null) 
-                  ? (semana['total_ingresos'] as num).toDouble() 
-                  : 0.0;
-              
-              final fechaInicio_dt = DateTime.parse(fechaInicio);
-              final fechaFin_dt = DateTime.parse(fechaFin);
-              
+              for (var gasto in gastosQuery) {
+                gastosPorFecha[gasto['fecha'] as String] =
+                    (gasto['gastos'] as num).toDouble();
+              }
+            }
+
+            // Generar últimos 7 días
+            for (int i = 6; i >= 0; i--) {
+              final fecha = DateTime.now().subtract(Duration(days: i));
+              final fechaStr =
+                  "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+              final ingresos = ingresosPorFecha[fechaStr] ?? 0.0;
+              final gastos = gastosPorFecha[fechaStr] ?? 0.0;
+              final ganancia = ingresos - gastos;
+
               ingresosDatos.add({
-                'label': '${fechaInicio_dt.day}/${fechaInicio_dt.month}\n\n${fechaFin_dt.day}/${fechaFin_dt.month}',
-                'ingreso': ingresos - gastos,
+                'label': '${fecha.day}/${fecha.month}',
+                'ingreso': ganancia,
+              });
+            }
+          } catch (e) {
+            print('Error en datos diarios: $e');
+
+            // Crear datos vacíos para los últimos 7 días
+            for (int i = 6; i >= 0; i--) {
+              final fecha = DateTime.now().subtract(Duration(days: i));
+              ingresosDatos.add({
+                'label': '${fecha.day}/${fecha.month}',
+                'ingreso': 0.0,
               });
             }
           }
-        } catch (e) {
-          print('Error en datos semanales: $e');
-          // Si hay error, crear datos vacíos para las últimas 6 semanas
-          for (int i = 5; i >= 0; i--) {
-            final fechaFin = DateTime.now().subtract(Duration(days: i * 7));
-            final fechaInicio = fechaFin.subtract(Duration(days: 6));
-            
-            ingresosDatos.add({
-              'label': '${fechaInicio.day}/${fechaInicio.month}\n\n${fechaFin.day}/${fechaFin.month}',
-              'ingreso': 0.0,
-            });
+          break;
+
+        case 'Semana':
+          try {
+            // Verificar si el método y tablas existen
+            bool gastosExists = await _tableExists('gastos');
+
+            final semanas = await _dbHelper.getIngresosSemanales(
+              ultimasSemanas: 6,
+            );
+
+            for (var semana in semanas) {
+              final fechaInicio = semana['fecha_inicio']?.toString() ?? '';
+              final fechaFin = semana['fecha_fin']?.toString() ?? '';
+
+              double gastos = 0.0;
+              if (fechaInicio.isNotEmpty &&
+                  fechaFin.isNotEmpty &&
+                  gastosExists) {
+                final gastosSemanales = await db.rawQuery(
+                  '''
+                  SELECT COALESCE(SUM(monto), 0) as total_gastos
+                  FROM gastos 
+                  WHERE fecha BETWEEN ? AND ?
+                ''',
+                  [fechaInicio, fechaFin],
+                );
+
+                gastos =
+                    (gastosSemanales.isNotEmpty &&
+                        gastosSemanales[0]['total_gastos'] != null)
+                    ? (gastosSemanales[0]['total_gastos'] as num).toDouble()
+                    : 0.0;
+              }
+
+              final ingresos = (semana['total_ingresos'] != null)
+                  ? (semana['total_ingresos'] as num).toDouble()
+                  : 0.0;
+
+              if (fechaInicio.isNotEmpty && fechaFin.isNotEmpty) {
+                final fechaInicio_dt = DateTime.parse(fechaInicio);
+                final fechaFin_dt = DateTime.parse(fechaFin);
+
+                ingresosDatos.add({
+                  'label':
+                      '${fechaInicio_dt.day}/${fechaInicio_dt.month}\n${fechaFin_dt.day}/${fechaFin_dt.month}',
+                  'ingreso': ingresos - gastos,
+                });
+              }
+            }
+
+            // Si no hay datos, crear datos vacíos
+            if (ingresosDatos.isEmpty) {
+              for (int i = 5; i >= 0; i--) {
+                final fechaFin = DateTime.now().subtract(Duration(days: i * 7));
+                final fechaInicio = fechaFin.subtract(Duration(days: 6));
+
+                ingresosDatos.add({
+                  'label':
+                      '${fechaInicio.day}/${fechaInicio.month}\n${fechaFin.day}/${fechaFin.month}',
+                  'ingreso': 0.0,
+                });
+              }
+            }
+          } catch (e) {
+            print('Error en datos semanales: $e');
+            // Crear datos vacíos para las últimas 6 semanas
+            for (int i = 5; i >= 0; i--) {
+              final fechaFin = DateTime.now().subtract(Duration(days: i * 7));
+              final fechaInicio = fechaFin.subtract(Duration(days: 6));
+
+              ingresosDatos.add({
+                'label':
+                    '${fechaInicio.day}/${fechaInicio.month}\n${fechaFin.day}/${fechaFin.month}',
+                'ingreso': 0.0,
+              });
+            }
           }
-        }
-        break;
+          break;
 
-      case 'Mes':
-        final meses = await db.rawQuery('''
-          SELECT mes, anio, total_ingresos, total_gastos
-          FROM estadisticas_mensuales 
-          WHERE (anio * 12 + mes) >= (strftime('%Y', 'now') * 12 + strftime('%m', 'now') - 5)
-          ORDER BY anio ASC, mes ASC
-        ''');
+        case 'Mes':
+          try {
+            bool estadisticasExists = await _tableExists(
+              'estadisticas_mensuales',
+            );
 
-        ingresosDatos = meses.map((m) {
-          final mesNombre = _getNombreMes((m['mes'] as num).toInt());
-          final ingresos = (m['total_ingresos'] as num?)?.toDouble() ?? 0.0;
-          final gastos = (m['total_gastos'] as num?)?.toDouble() ?? 0.0;
-          return {
-            'label': '$mesNombre\n${m['anio']}',
-            'ingreso': ingresos - gastos,
-          };
-        }).toList();
-        break;
+            if (estadisticasExists) {
+              final meses = await db.rawQuery('''
+                SELECT mes, anio, total_ingresos, total_gastos
+                FROM estadisticas_mensuales 
+                WHERE (anio * 12 + mes) >= (strftime('%Y', 'now') * 12 + strftime('%m', 'now') - 5)
+                ORDER BY anio ASC, mes ASC
+              ''');
 
-      case 'Año':
-        final anios = await db.rawQuery('''
-          SELECT anio, SUM(total_ingresos) as ingresos_anuales, SUM(total_gastos) as gastos_anuales
-          FROM estadisticas_mensuales 
-          GROUP BY anio
-          ORDER BY anio ASC
-          LIMIT 6
-        ''');
+              ingresosDatos = meses.map((m) {
+                final mesNombre = _getNombreMes((m['mes'] as num).toInt());
+                final ingresos =
+                    (m['total_ingresos'] as num?)?.toDouble() ?? 0.0;
+                final gastos = (m['total_gastos'] as num?)?.toDouble() ?? 0.0;
+                return {
+                  'label': '$mesNombre\n${m['anio']}',
+                  'ingreso': ingresos - gastos,
+                };
+              }).toList();
+            }
 
-        ingresosDatos = anios.map((a) {
-          final ingresos = (a['ingresos_anuales'] as num?)?.toDouble() ?? 0.0;
-          final gastos = (a['gastos_anuales'] as num?)?.toDouble() ?? 0.0;
-          return {
-            'label': a['anio'].toString(),
-            'ingreso': ingresos - gastos,
-          };
-        }).toList();
-        break;
+            // Si no hay datos, crear datos vacíos para los últimos 6 meses
+            if (ingresosDatos.isEmpty) {
+              final ahora = DateTime.now();
+              for (int i = 5; i >= 0; i--) {
+                final fecha = DateTime(ahora.year, ahora.month - i, 1);
+                final mesNombre = _getNombreMes(fecha.month);
+                ingresosDatos.add({
+                  'label': '$mesNombre\n${fecha.year}',
+                  'ingreso': 0.0,
+                });
+              }
+            }
+          } catch (e) {
+            print('Error en datos mensuales: $e');
+            // Crear datos vacíos para los últimos 6 meses
+            final ahora = DateTime.now();
+            for (int i = 5; i >= 0; i--) {
+              final fecha = DateTime(ahora.year, ahora.month - i, 1);
+              final mesNombre = _getNombreMes(fecha.month);
+              ingresosDatos.add({
+                'label': '$mesNombre\n${fecha.year}',
+                'ingreso': 0.0,
+              });
+            }
+          }
+          break;
+
+        case 'Año':
+          try {
+            bool estadisticasExists = await _tableExists(
+              'estadisticas_mensuales',
+            );
+
+            if (estadisticasExists) {
+              final anios = await db.rawQuery('''
+                SELECT anio, SUM(total_ingresos) as ingresos_anuales, SUM(total_gastos) as gastos_anuales
+                FROM estadisticas_mensuales 
+                GROUP BY anio
+                ORDER BY anio ASC
+                LIMIT 6
+              ''');
+
+              ingresosDatos = anios.map((a) {
+                final ingresos =
+                    (a['ingresos_anuales'] as num?)?.toDouble() ?? 0.0;
+                final gastos = (a['gastos_anuales'] as num?)?.toDouble() ?? 0.0;
+                return {
+                  'label': a['anio'].toString(),
+                  'ingreso': ingresos - gastos,
+                };
+              }).toList();
+            }
+
+            // Si no hay datos, crear al menos el año actual
+            if (ingresosDatos.isEmpty) {
+              final anioActual = DateTime.now().year;
+              ingresosDatos.add({
+                'label': anioActual.toString(),
+                'ingreso': 0.0,
+              });
+            }
+          } catch (e) {
+            print('Error en datos anuales: $e');
+            // Crear datos vacíos para el año actual
+            final anioActual = DateTime.now().year;
+            ingresosDatos.add({'label': anioActual.toString(), 'ingreso': 0.0});
+          }
+          break;
+      }
+
+      return ingresosDatos;
+    } catch (e) {
+      print('Error general en _getIngresosDatos: $e');
+      // Retornar datos vacíos para evitar crash
+      return [];
     }
-
-    return ingresosDatos;
   }
 
   Future<double> _getTotalIngresos() async {
-    final datos = await _getIngresosDatos();
-    return datos.fold<double>(0.0, (sum, item) {
-      return sum + ((item['ingreso'] as num?)?.toDouble() ?? 0.0);
-    });
+    try {
+      final datos = await _getIngresosDatos();
+      return datos.fold<double>(0.0, (sum, item) {
+        return sum + ((item['ingreso'] as num?)?.toDouble() ?? 0.0);
+      });
+    } catch (e) {
+      print('Error calculando total de ingresos: $e');
+      return 0.0;
+    }
   }
 
   String _getNombreMes(int mes) {
@@ -511,6 +676,6 @@ class _GraficasScreenState extends State<GraficasScreen> {
       'Nov',
       'Dic',
     ];
-    return meses[mes] ?? mes.toString();
+    return (mes >= 1 && mes <= 12) ? meses[mes] : mes.toString();
   }
 }

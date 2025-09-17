@@ -4,7 +4,8 @@ import '../database/database_helper.dart';
 class MantenimientoScreen extends StatefulWidget {
   final Function(String) onNavigate;
 
-  const MantenimientoScreen({Key? key, required this.onNavigate}) : super(key: key);
+  const MantenimientoScreen({Key? key, required this.onNavigate})
+    : super(key: key);
 
   @override
   State<MantenimientoScreen> createState() => _MantenimientoScreenState();
@@ -17,7 +18,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    
+
     return Scaffold(
       backgroundColor: Colors.green[600],
       body: SafeArea(
@@ -38,7 +39,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
                   ),
                   SizedBox(width: isTablet ? 16 : 8),
                   Text(
-                    'Limpieza y Mantenimiento',
+                    'Limpieza',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: isTablet ? 28 : 20,
@@ -59,7 +60,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
                 ],
               ),
             ),
-            
+
             // Content
             Expanded(
               child: Container(
@@ -72,11 +73,9 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
                   future: _getCuartosEnMantenimiento(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
-                    
+
                     if (snapshot.hasError) {
                       return Center(
                         child: Column(
@@ -99,9 +98,9 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
                         ),
                       );
                     }
-                    
+
                     final cuartosMantenimiento = snapshot.data ?? [];
-                    
+
                     if (cuartosMantenimiento.isEmpty) {
                       return Center(
                         child: Column(
@@ -133,7 +132,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
                         ),
                       );
                     }
-                    
+
                     return ListView.builder(
                       padding: EdgeInsets.all(isTablet ? 24 : 16),
                       itemCount: cuartosMantenimiento.length,
@@ -157,7 +156,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
     final tipo = cuarto['tipo_habitacion'] ?? 'Cuarto';
     final estado = cuarto['estado'] ?? 'mantenimiento';
     final fechaCreacion = cuarto['created_at'] ?? '';
-    
+
     // Formatear fecha
     String fechaFormateada = '';
     if (fechaCreacion.isNotEmpty) {
@@ -168,7 +167,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
         fechaFormateada = 'Fecha inválida';
       }
     }
-    
+
     // Configurar colores y textos según el estado
     Color? colorFondo;
     Color? colorTexto;
@@ -176,7 +175,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
     String estadoTexto;
     String descripcionEstado;
     IconData icono;
-    
+
     if (estado == 'limpieza') {
       colorFondo = Colors.blue[100];
       colorTexto = Colors.blue[700];
@@ -192,7 +191,7 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
       descripcionEstado = 'En mantenimiento';
       icono = Icons.build;
     }
-    
+
     return Card(
       margin: EdgeInsets.only(bottom: isTablet ? 16 : 12),
       elevation: 4,
@@ -201,101 +200,73 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
       ),
       child: Padding(
         padding: EdgeInsets.all(isTablet ? 20 : 16),
-        child: Row(
+        child: Column(
+          // Este Column reemplaza al Row principal
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Información del cuarto
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header del cuarto
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 16 : 12,
-                          vertical: isTablet ? 8 : 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorFondo,
-                          borderRadius: BorderRadius.circular(isTablet ? 12 : 8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              tipo == 'cabaña' ? Icons.cabin : Icons.hotel,
-                              color: colorTexto,
-                              size: isTablet ? 20 : 16,
-                            ),
-                            SizedBox(width: isTablet ? 8 : 4),
-                            Text(
-                              '$tipo $numero',
-                              style: TextStyle(
-                                color: colorTexto,
-                                fontWeight: FontWeight.bold,
-                                fontSize: isTablet ? 16 : 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: isTablet ? 12 : 8),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 12 : 8,
-                          vertical: isTablet ? 6 : 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorBoton,
-                          borderRadius: BorderRadius.circular(isTablet ? 8 : 6),
-                        ),
-                        child: Text(
-                          estadoTexto,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: isTablet ? 12 : 10,
-                          ),
-                        ),
-                      ),
-                    ],
+            // La información del cuarto, ahora en su propia sección
+            Row(
+              children: [
+                // Contenedor del tipo y número de cuarto
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 16 : 12,
+                    vertical: isTablet ? 8 : 6,
                   ),
-                  
-                  SizedBox(height: isTablet ? 12 : 8),
-                  
-                  // Información del estado
-                  Row(
+                  decoration: BoxDecoration(
+                    color: colorFondo,
+                    borderRadius: BorderRadius.circular(isTablet ? 12 : 8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        icono,
-                        size: isTablet ? 18 : 16,
-                        color: Colors.grey[600],
+                        tipo == 'cabaña' ? Icons.cabin : Icons.hotel,
+                        color: colorTexto,
+                        size: isTablet ? 20 : 16,
                       ),
-                      SizedBox(width: isTablet ? 8 : 6),
+                      SizedBox(width: isTablet ? 8 : 4),
                       Text(
-                        descripcionEstado,
+                        '$tipo $numero',
                         style: TextStyle(
-                          fontSize: isTablet ? 14 : 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                          color: colorTexto,
+                          fontWeight: FontWeight.bold,
+                          fontSize: isTablet ? 16 : 14,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(width: isTablet ? 12 : 8),
+                // Contenedor del estado del cuarto
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 12 : 8,
+                    vertical: isTablet ? 6 : 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorBoton,
+                    borderRadius: BorderRadius.circular(isTablet ? 8 : 6),
+                  ),
+                  child: Text(
+                    estadoTexto,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: isTablet ? 12 : 10,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            
-            SizedBox(width: isTablet ? 20 : 16),
-            
-            // Botón de finalizar
+
+            // Espacio vertical para separar la información del botón
+            SizedBox(height: isTablet ? 20 : 16),
+
+            // Botón de finalizar, ahora en una línea separada
             ElevatedButton.icon(
               onPressed: () => _finalizarEstado(cuarto),
-              icon: Icon(
-                Icons.check_circle,
-                size: isTablet ? 20 : 18,
-              ),
+              icon: Icon(Icons.check_circle, size: isTablet ? 20 : 18),
               label: Text(
                 'Finalizar',
                 style: TextStyle(
@@ -335,14 +306,16 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
     final estado = cuarto['estado'];
     final numero = cuarto['numero'];
     final tipo = cuarto['tipo_habitacion'];
-    
+
     final confirmado = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Finalizar ${estado == 'limpieza' ? 'Limpieza' : 'Mantenimiento'}'),
+          title: Text(
+            'Finalizar ${estado == 'limpieza' ? 'Limpieza' : 'Mantenimiento'}',
+          ),
           content: Text(
-            '¿Confirmas que el $tipo $numero está listo para usar?'
+            '¿Confirmas que el $tipo $numero está listo para usar?',
           ),
           actions: [
             TextButton(
@@ -365,12 +338,12 @@ class _MantenimientoScreenState extends State<MantenimientoScreen> {
     if (confirmado == true) {
       try {
         await _dbHelper.finalizarLimpiezaMantenimiento(cuarto['id']);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${estado == 'limpieza' ? 'Limpieza' : 'Mantenimiento'} finalizado - Cuarto disponible'
+                '${estado == 'limpieza' ? 'Limpieza' : 'Mantenimiento'} finalizado - Cuarto disponible',
               ),
               backgroundColor: Colors.green[600],
             ),
