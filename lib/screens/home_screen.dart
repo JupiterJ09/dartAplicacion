@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    
+
     return Container(
       color: Colors.green[600],
       width: double.infinity,
@@ -27,107 +27,129 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Container(
-                // Márgenes iguales en todos los lados
                 margin: EdgeInsets.all(isTablet ? 24 : 20),
                 padding: EdgeInsets.all(isTablet ? 32 : 24),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(isTablet ? 32 : 24),
                 ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final cardWidth = isTablet 
-                        ? (constraints.maxWidth - 24) / 2 
-                        : (constraints.maxWidth - 16) / 2;
-                    final cardHeight = isTablet ? 160.0 : 120.0;
-                    
-                    return FutureBuilder<Map<String, dynamic>>(
-                      future: _getResumenDatos(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-                        
-                        final datos = snapshot.data ?? {
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: _getResumenDatos(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    final datos =
+                        snapshot.data ??
+                        {
                           'en_uso': 0,
                           'libres': 0,
                           'mantenimiento': 0,
                           'ingresos_hoy': 0.0,
                         };
-                        
-                        return SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              SizedBox(height: isTablet ? 20 : 16),
-                              
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _buildHomeCard(
-                                    Icons.people,
-                                    'En uso: ${datos['en_uso']}',
-                                    Colors.green[100]!, 
-                                    cardWidth, 
-                                    cardHeight, 
-                                    isTablet, 
-                                    () => widget.onNavigate('en_uso')
-                                  ),
 
-                                  _buildHomeCard(
-                                    Icons.bed, 
-                                    'Libres: ${datos['libres']}', 
-                                    Colors.green[100]!, 
-                                    cardWidth,
-                                    cardHeight,
-                                    isTablet,
-                                    () => widget.onNavigate('libres')
-                                  ),
-                                ],
+                    final cardHeight = isTablet ? 120.0 : 100.0;
+
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SizedBox(height: isTablet ? 20 : 16),
+
+                          // Primera fila - 2 columnas
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildHomeCard(
+                                  Icons.people,
+                                  'En uso: ${datos['en_uso']}',
+                                  Colors.green[100]!,
+                                  double.infinity,
+                                  cardHeight,
+                                  isTablet,
+                                  () => widget.onNavigate('en_uso'),
+                                ),
                               ),
-                              
-                              SizedBox(height: isTablet ? 32 : 24),
-                              
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _buildHomeCard(
-                                    Icons.build, 
-                                    'Mantenimiento: ${datos['mantenimiento']}', 
-                                    Colors.green[100]!, 
-                                    cardWidth,
-                                    cardHeight,
-                                    isTablet,
-                                    () => widget.onNavigate('mantenimiento')
-                                  ),
-                                  _buildHomeCard(
-                                    Icons.attach_money, 
-                                    'Ingresos hoy: \$${datos['ingresos_hoy'].toStringAsFixed(0)}', 
-                                    Colors.green[100]!, 
-                                    cardWidth,
-                                    cardHeight,
-                                    isTablet,
-                                    () => widget.onNavigate('graficas')
-                                  ),
-                                ],
+                              SizedBox(width: isTablet ? 16 : 12),
+                              Expanded(
+                                child: _buildHomeCard(
+                                  Icons.bed,
+                                  'Libres: ${datos['libres']}',
+                                  Colors.green[100]!,
+                                  double.infinity,
+                                  cardHeight,
+                                  isTablet,
+                                  () => widget.onNavigate('libres'),
+                                ),
                               ),
-                              
-                              SizedBox(height: isTablet ? 40 : 32),
-                              
-                              _buildHomeCard(
-                                Icons.history, 
-                                'Historial', 
-                                Colors.green[100]!, 
-                                double.infinity,
-                                cardHeight,
-                                isTablet,
-                                () => widget.onNavigate('historial')
-                              ),
-                              
-                              SizedBox(height: isTablet ? 32 : 24),
                             ],
                           ),
-                        );
-                      },
+
+                          SizedBox(height: isTablet ? 24 : 16),
+
+                          // Segunda fila - 2 columnas
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildHomeCard(
+                                  Icons.build,
+                                  'Mantenimiento: ${datos['mantenimiento']}',
+                                  Colors.green[100]!,
+                                  double.infinity,
+                                  cardHeight,
+                                  isTablet,
+                                  () => widget.onNavigate('mantenimiento'),
+                                ),
+                              ),
+                              SizedBox(width: isTablet ? 16 : 12),
+                              Expanded(
+                                child: _buildHomeCard(
+                                  Icons.attach_money,
+                                  'Ganancias hoy\n\$${datos['ganancias_hoy'].toStringAsFixed(0)}',
+                                  Colors.green[100]!,
+                                  double.infinity,
+                                  cardHeight,
+                                  isTablet,
+                                  () => widget.onNavigate('graficas'),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: isTablet ? 24 : 16),
+
+                          // Tercera fila - 2 columnas
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildHomeCard(
+                                  Icons.history,
+                                  'Historial',
+                                  Colors.green[100]!,
+                                  double.infinity,
+                                  cardHeight,
+                                  isTablet,
+                                  () => widget.onNavigate('historial'),
+                                ),
+                              ),
+                              SizedBox(width: isTablet ? 16 : 12),
+                              Expanded(
+                                child: _buildHomeCard(
+                                  Icons.receipt_long,
+                                  'Gastos',
+                                  Colors.green[100]!,
+                                  double.infinity,
+                                  cardHeight,
+                                  isTablet,
+                                  () => widget.onNavigate('costos'),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: isTablet ? 40 : 32),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -141,25 +163,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<Map<String, dynamic>> _getResumenDatos() async {
     final db = await _dbHelper.database;
-    
+
     // Contar cuartos por estado
     final estadoCuartos = await db.rawQuery('''
-      SELECT estado, COUNT(*) as cantidad
-      FROM cuartos 
-      GROUP BY estado
-    ''');
-    
+  SELECT estado, COUNT(*) as cantidad
+  FROM cuartos 
+  GROUP BY estado
+''');
+
     // Obtener ingresos de hoy
     final ingresosHoy = await db.rawQuery('''
-      SELECT total_ingresos
-      FROM ingresos_diarios 
-      WHERE fecha = date('now')
-    ''');
-    
+    SELECT COALESCE(SUM(ingreso_total), 0) as total_ingresos
+    FROM solicitudes 
+    WHERE date(fecha_solicitud) = date('now') 
+  ''');
+
+    // Obtener gastos de hoy
+    final gastosHoy = await db.rawQuery('''
+    SELECT COALESCE(SUM(monto), 0) as total_gastos
+    FROM gastos 
+    WHERE fecha = date('now')
+  ''');
+
+    // DEBUG - Agregar estos prints temporalmente
+    print('DEBUG - Fecha actual: ${DateTime.now()}');
+    print('DEBUG - Ingresos hoy: ${ingresosHoy}');
+    print('DEBUG - Gastos hoy: ${gastosHoy}');
+
     int enUso = 0;
     int libres = 0;
     int mantenimiento = 0;
-    
+
     for (var estado in estadoCuartos) {
       final cantidad = (estado['cantidad'] as num).toInt();
       switch (estado['estado']) {
@@ -170,29 +204,35 @@ class _HomeScreenState extends State<HomeScreen> {
           libres = cantidad;
           break;
         case 'mantenimiento':
-          mantenimiento = cantidad;
+        case 'limpieza':
+          mantenimiento += cantidad;
           break;
       }
     }
-    
-    final ingresosDiarios = ingresosHoy.isNotEmpty 
-        ? (ingresosHoy[0]['total_ingresos'] as num).toDouble()
-        : 0.0;
-    
+
+    final ingresosDiarios = (ingresosHoy[0]['total_ingresos'] as num)
+        .toDouble();
+    final gastosDiarios = (gastosHoy[0]['total_gastos'] as num).toDouble();
+
+    // DEBUG - Más prints
+    print('DEBUG - Ingresos calculados: $ingresosDiarios');
+    print('DEBUG - Gastos calculados: $gastosDiarios');
+    print('DEBUG - Ganancia final: ${ingresosDiarios - gastosDiarios}');
+
     return {
       'en_uso': enUso,
       'libres': libres,
       'mantenimiento': mantenimiento,
-      'ingresos_hoy': ingresosDiarios,
+      'ganancias_hoy': ingresosDiarios - gastosDiarios,
     };
   }
 
   Widget _buildHomeCard(
-    IconData icon, 
-    String text, 
-    Color color, 
-    double width, 
-    double height, 
+    IconData icon,
+    String text,
+    Color color,
+    double width,
+    double height,
     bool isTablet,
     VoidCallback? onTap,
   ) {
@@ -210,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      child: Material(                     
+      child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
@@ -221,11 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  icon, 
-                  size: isTablet ? 40 : 32, 
-                  color: Colors.green[700],
-                ),
+                Icon(icon, size: isTablet ? 40 : 32, color: Colors.green[700]),
                 SizedBox(height: isTablet ? 12 : 8),
                 FittedBox(
                   child: Text(

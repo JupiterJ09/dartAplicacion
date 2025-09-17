@@ -409,8 +409,16 @@ class _EnUsoScreenState extends State<EnUsoScreen> {
   }
   
   Future<void> _finalizarEstancia(Map<String, dynamic> cuarto) async {
-    try {
-      // Buscar la solicitud activa para este cuarto
+  try {
+    print('=== DEBUG: Iniciando finalización ===');
+    print('Cuarto ID: ${cuarto['id']}');
+    print('Solicitud ID desde cuarto: ${cuarto['solicitud_id']}');
+    
+    int? solicitudId = cuarto['solicitud_id'];
+    
+    // Si no hay solicitud_id en el JOIN, buscar manualmente
+    if (solicitudId == null) {
+      print('No hay solicitud_id, buscando manualmente...');
       final solicitudesActivas = await _dbHelper.getSolicitudesActivas();
       final solicitudActiva = solicitudesActivas.firstWhere(
         (s) => s['cuarto_id'] == cuarto['id'],
@@ -418,37 +426,69 @@ class _EnUsoScreenState extends State<EnUsoScreen> {
       );
       
       if (solicitudActiva.isNotEmpty) {
-        await _dbHelper.finalizarSolicitud(solicitudActiva['id']);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Estancia finalizada correctamente',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.green[600],
-              duration: Duration(seconds: 2),
-            ),
-          );
-          
-          // Refrescar la pantalla
-          setState(() {});
-        }
+        solicitudId = solicitudActiva['id'];
+        print('Solicitud encontrada manualmente: $solicitudId');
       }
-    } catch (e) {
+    }
+    
+    if (solicitudId != null) {
+      print('Finalizando solicitud ID: $solicitudId');
+      await _dbHelper.finalizarSolicitud(solicitudId);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error al finalizar estancia: $e',
+              'Estancia finalizada - Cuarto enviado a limpieza',
               style: TextStyle(color: Colors.white),
             ),
-            backgroundColor: Colors.red[600],
-            duration: Duration(seconds: 3),
+            backgroundColor: Colors.green[600],
+            duration: Duration(seconds: 2),
           ),
         );
+        
+        setState(() {});
+      }
+    } else {
+      print('ERROR: No se encontró solicitud para el cuarto');
+      
+      // Como fallback, cambiar estado del cuarto directamente a limpieza
+      await _dbHelper.finalizarLimpiezaMantenimiento(cuarto['id']);
+      await _dbHelper.database.then((db) async {
+        await db.update(
+          'cuartos',
+          {'estado': 'limpieza'},
+          where: 'id = ?',
+          whereArgs: [cuarto['id']],
+        );
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Cuarto liberado y enviado a limpieza',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.orange[600],
+            duration: Duration(seconds: 2),
+          ),
+        );
+        
+        setState(() {});
       }
     }
+  } catch (e) {
+    print('ERROR en _finalizarEstancia: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red[600],
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
+}
 }

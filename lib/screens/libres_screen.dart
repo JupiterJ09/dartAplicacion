@@ -18,7 +18,7 @@ class _LibresScreenState extends State<LibresScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    
+
     return Scaffold(
       backgroundColor: Colors.green[600],
       body: SafeArea(
@@ -48,6 +48,19 @@ class _LibresScreenState extends State<LibresScreen> {
                   ),
                   Spacer(),
                   IconButton(
+                    // ← NUEVO: Botón para gestionar cuartos
+                    onPressed: () => widget.onNavigate('registro'),
+                    icon: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: isTablet ? 32 : 24,
+                    ),
+                  ),
+                  SizedBox(
+                    width: isTablet ? 8 : 4,
+                  ), // ← Espaciado entre botones
+                  IconButton(
+                    // ← Botón de refresh (ya existía)
                     onPressed: () {
                       setState(() {}); // Refrescar datos
                     },
@@ -60,7 +73,7 @@ class _LibresScreenState extends State<LibresScreen> {
                 ],
               ),
             ),
-            
+
             // Content
             Expanded(
               child: Container(
@@ -73,11 +86,9 @@ class _LibresScreenState extends State<LibresScreen> {
                   future: _dbHelper.getCuartosDisponibles(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
-                    
+
                     if (snapshot.hasError) {
                       return Center(
                         child: Column(
@@ -109,9 +120,9 @@ class _LibresScreenState extends State<LibresScreen> {
                         ),
                       );
                     }
-                    
+
                     final cuartosDisponibles = snapshot.data ?? [];
-                    
+
                     if (cuartosDisponibles.isEmpty) {
                       return Center(
                         child: Column(
@@ -143,7 +154,7 @@ class _LibresScreenState extends State<LibresScreen> {
                         ),
                       );
                     }
-                    
+
                     return ListView.builder(
                       padding: EdgeInsets.all(isTablet ? 24 : 16),
                       itemCount: cuartosDisponibles.length,
@@ -167,7 +178,7 @@ class _LibresScreenState extends State<LibresScreen> {
     final tipo = cuarto['tipo_habitacion'] ?? 'Cuarto';
     final precioPorHora = cuarto['precio_por_hora']?.toDouble() ?? 0.0;
     final precioPorDia = cuarto['precio_por_dia']?.toDouble() ?? 0.0;
-    
+
     return Card(
       margin: EdgeInsets.only(bottom: isTablet ? 16 : 12),
       elevation: 4,
@@ -232,9 +243,9 @@ class _LibresScreenState extends State<LibresScreen> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: isTablet ? 16 : 12),
-            
+
             // Información de precios
             Row(
               children: [
@@ -260,19 +271,16 @@ class _LibresScreenState extends State<LibresScreen> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: isTablet ? 20 : 16),
-            
+
             // Botones de acción
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _showReservarDialog(cuarto, 'por_hora'),
-                    icon: Icon(
-                      Icons.schedule,
-                      size: isTablet ? 18 : 16,
-                    ),
+                    icon: Icon(Icons.schedule, size: isTablet ? 18 : 16),
                     label: Text(
                       'Por Horas',
                       style: TextStyle(
@@ -296,10 +304,7 @@ class _LibresScreenState extends State<LibresScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _showReservarDialog(cuarto, 'por_dia'),
-                    icon: Icon(
-                      Icons.calendar_today,
-                      size: isTablet ? 18 : 16,
-                    ),
+                    icon: Icon(Icons.calendar_today, size: isTablet ? 18 : 16),
                     label: Text(
                       'Por Días',
                       style: TextStyle(
@@ -321,18 +326,15 @@ class _LibresScreenState extends State<LibresScreen> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: isTablet ? 12 : 8),
-            
+
             // Botón precio personalizado
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () => _showReservarDialog(cuarto, 'personalizado'),
-                icon: Icon(
-                  Icons.edit,
-                  size: isTablet ? 18 : 16,
-                ),
+                icon: Icon(Icons.edit, size: isTablet ? 18 : 16),
                 label: Text(
                   'Precio Personalizado',
                   style: TextStyle(
@@ -343,9 +345,7 @@ class _LibresScreenState extends State<LibresScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.orange[700],
                   side: BorderSide(color: Colors.orange[700]!),
-                  padding: EdgeInsets.symmetric(
-                    vertical: isTablet ? 12 : 10,
-                  ),
+                  padding: EdgeInsets.symmetric(vertical: isTablet ? 12 : 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(isTablet ? 10 : 8),
                   ),
@@ -357,7 +357,7 @@ class _LibresScreenState extends State<LibresScreen> {
       ),
     );
   }
-  
+
   Widget _buildPriceRow(
     IconData icon,
     String label,
@@ -366,11 +366,7 @@ class _LibresScreenState extends State<LibresScreen> {
   ) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: isTablet ? 18 : 16,
-          color: Colors.grey[600],
-        ),
+        Icon(icon, size: isTablet ? 18 : 16, color: Colors.grey[600]),
         SizedBox(width: isTablet ? 8 : 6),
         Text(
           '$label:',
@@ -392,23 +388,23 @@ class _LibresScreenState extends State<LibresScreen> {
       ],
     );
   }
-  
+
   void _showReservarDialog(Map<String, dynamic> cuarto, String modalidad) {
     final numero = cuarto['numero'] ?? 'S/N';
     final tipo = cuarto['tipo_habitacion'] ?? 'Cuarto';
     final cuartoId = cuarto['id'];
-    
+
     final TextEditingController cantidadController = TextEditingController();
     final TextEditingController precioController = TextEditingController();
-    
+
     // Pre-llenar precio si no es personalizado
     if (modalidad != 'personalizado') {
-      final precio = modalidad == 'por_hora' 
+      final precio = modalidad == 'por_hora'
           ? cuarto['precio_por_hora']?.toDouble() ?? 0.0
           : cuarto['precio_por_dia']?.toDouble() ?? 0.0;
       precioController.text = precio.toStringAsFixed(2);
     }
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -426,48 +422,62 @@ class _LibresScreenState extends State<LibresScreen> {
                   ),
                 ),
                 SizedBox(height: 16),
-                
+
                 // Campo cantidad
                 TextField(
                   controller: cantidadController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: modalidad == 'por_hora' ? 'Número de horas' : 
-                               modalidad == 'por_dia' ? 'Número de días' : 'Cantidad',
+                    labelText: modalidad == 'por_hora'
+                        ? 'Número de horas'
+                        : modalidad == 'por_dia'
+                        ? 'Número de días'
+                        : 'Cantidad',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(
-                      modalidad == 'por_hora' ? Icons.schedule : 
-                      modalidad == 'por_dia' ? Icons.calendar_today : Icons.numbers,
+                      modalidad == 'por_hora'
+                          ? Icons.schedule
+                          : modalidad == 'por_dia'
+                          ? Icons.calendar_today
+                          : Icons.numbers,
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: 16),
-                
+
                 // Campo precio (editable solo si es personalizado)
                 TextField(
                   controller: precioController,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   enabled: modalidad == 'personalizado',
                   decoration: InputDecoration(
-                    labelText: modalidad == 'personalizado' ? 'Precio por unidad' : 'Precio establecido',
+                    labelText: modalidad == 'personalizado'
+                        ? 'Precio por unidad'
+                        : 'Precio establecido',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.attach_money),
-                    suffix: Text(modalidad == 'por_hora' ? '/hora' : 
-                                modalidad == 'por_dia' ? '/día' : '/unidad'),
+                    suffix: Text(
+                      modalidad == 'por_hora'
+                          ? '/hora'
+                          : modalidad == 'por_dia'
+                          ? '/día'
+                          : '/unidad',
+                    ),
                   ),
                 ),
-                
+
                 SizedBox(height: 16),
-                
+
                 // Mostrar total calculado
                 ValueListenableBuilder(
                   valueListenable: cantidadController,
                   builder: (context, value, child) {
                     final cantidad = int.tryParse(cantidadController.text) ?? 0;
-                    final precio = double.tryParse(precioController.text) ?? 0.0;
+                    final precio =
+                        double.tryParse(precioController.text) ?? 0.0;
                     final total = cantidad * precio;
-                    
+
                     return Container(
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -510,7 +520,7 @@ class _LibresScreenState extends State<LibresScreen> {
               onPressed: () {
                 final cantidad = int.tryParse(cantidadController.text) ?? 0;
                 final precio = double.tryParse(precioController.text) ?? 0.0;
-                
+
                 if (cantidad > 0 && precio > 0) {
                   Navigator.of(context).pop();
                   _crearSolicitud(cuartoId, modalidad, cantidad, precio);
@@ -534,11 +544,11 @@ class _LibresScreenState extends State<LibresScreen> {
       },
     );
   }
-  
+
   Future<void> _crearSolicitud(
-    int cuartoId, 
-    String modalidad, 
-    int cantidad, 
+    int cuartoId,
+    String modalidad,
+    int cantidad,
     double precio,
   ) async {
     try {
@@ -549,7 +559,7 @@ class _LibresScreenState extends State<LibresScreen> {
         dias: modalidad == 'por_dia' ? cantidad : null,
         precioPersonalizado: modalidad == 'personalizado' ? precio : null,
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -561,7 +571,7 @@ class _LibresScreenState extends State<LibresScreen> {
             duration: Duration(seconds: 2),
           ),
         );
-        
+
         // Refrescar la pantalla
         setState(() {});
       }

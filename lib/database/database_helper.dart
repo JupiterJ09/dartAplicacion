@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(documentsDirectory.path, fileName);
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: (db) async {
@@ -40,7 +40,7 @@ class DatabaseHelper {
         tipo_habitacion TEXT NOT NULL CHECK(tipo_habitacion IN ('cabaña', 'cuarto')),
         precio_por_hora REAL NOT NULL CHECK(precio_por_hora > 0),
         precio_por_dia REAL NOT NULL CHECK(precio_por_dia > 0),
-        estado TEXT DEFAULT 'disponible' CHECK(estado IN ('disponible', 'ocupado', 'mantenimiento')),
+        estado TEXT DEFAULT 'disponible' CHECK(estado IN ('disponible', 'ocupado', 'mantenimiento', 'limpieza')),
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
     ''');
@@ -96,6 +96,21 @@ class DatabaseHelper {
         total_ingresos REAL DEFAULT 0 CHECK(total_ingresos >= 0),
         total_solicitudes INTEGER DEFAULT 0 CHECK(total_solicitudes >= 0),
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+    ''');
+
+    // TABLA INGRESOS SEMANALES
+    await db.execute('''
+      CREATE TABLE ingresos_semanales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        anio INTEGER NOT NULL,
+        semana INTEGER NOT NULL,
+        fecha_inicio TEXT NOT NULL,
+        fecha_fin TEXT NOT NULL,
+        total_ingresos REAL DEFAULT 0,
+        total_solicitudes INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(anio, semana)
       );
     ''');
 
@@ -163,6 +178,54 @@ class DatabaseHelper {
         print('Error upgrading database: $e');
       }
     }
+    
+    if (oldVersion < 3) {
+      try {
+        // Crear tabla temporal con nuevo constraint
+        await db.execute('''
+          CREATE TABLE cuartos_temp (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            numero TEXT NOT NULL UNIQUE,
+            tipo_habitacion TEXT NOT NULL CHECK(tipo_habitacion IN ('cabaña', 'cuarto')),
+            precio_por_hora REAL NOT NULL CHECK(precio_por_hora > 0),
+            precio_por_dia REAL NOT NULL CHECK(precio_por_dia > 0),
+            estado TEXT DEFAULT 'disponible' CHECK(estado IN ('disponible', 'ocupado', 'mantenimiento', 'limpieza')),
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+          );
+        ''');
+        
+        // Copiar datos existentes
+        await db.execute('''
+          INSERT INTO cuartos_temp (id, numero, tipo_habitacion, precio_por_hora, precio_por_dia, estado, created_at)
+          SELECT id, numero, tipo_habitacion, precio_por_hora, precio_por_dia, estado, created_at FROM cuartos;
+        ''');
+        
+        // Eliminar tabla antigua y renombrar
+        await db.execute('DROP TABLE cuartos;');
+        await db.execute('ALTER TABLE cuartos_temp RENAME TO cuartos;');
+        
+        // Recrear índices
+        await db.execute('CREATE INDEX idx_cuartos_estado ON cuartos(estado);');
+        await db.execute('CREATE INDEX idx_cuartos_tipo ON cuartos(tipo_habitacion);');
+        
+        // Crear tabla de ingresos semanales
+        await db.execute('''
+          CREATE TABLE ingresos_semanales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            anio INTEGER NOT NULL,
+            semana INTEGER NOT NULL,
+            fecha_inicio TEXT NOT NULL,
+            fecha_fin TEXT NOT NULL,
+            total_ingresos REAL DEFAULT 0,
+            total_solicitudes INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(anio, semana)
+          );
+        ''');
+      } catch (e) {
+        print('Error upgrading database to version 3: $e');
+      }
+    }
   }
 
   // FUNCIONES CORREGIDAS QUE USAN DatabaseExecutor
@@ -176,14 +239,51 @@ class DatabaseHelper {
       AND estado = 'finalizada'
     ''', [fecha]);
     
-
-      final totalIngresos = (ingresos[0]['total_ingresos'] as num).toDouble();
-      final totalSolicitudes = (ingresos[0]['total_solicitudes'] as num).toInt();
+    final totalIngresos = (ingresos[0]['total_ingresos'] as num).toDouble();
+    final totalSolicitudes = (ingresos[0]['total_solicitudes'] as num).toInt();
     
     await db.execute('''
       INSERT OR REPLACE INTO ingresos_diarios (fecha, total_ingresos, total_solicitudes)
       VALUES (date(?), ?, ?)
     ''', [fecha, totalIngresos, totalSolicitudes]);
+  }
+
+  Future<void> _actualizarIngresosSemanales(DatabaseExecutor db, DateTime fecha) async {
+    final fechaDate = DateTime(fecha.year, fecha.month, fecha.day);
+    final inicioSemana = fechaDate.subtract(Duration(days: fechaDate.weekday - 1));
+    final finSemana = inicioSemana.add(Duration(days: 6));
+    
+    final primerDiaAnio = DateTime(fecha.year, 1, 1);
+    final diferenciaDias = inicioSemana.difference(primerDiaAnio).inDays;
+    final numeroSemana = (diferenciaDias / 7).ceil() + 1;
+    
+    final ingresos = await db.rawQuery('''
+      SELECT 
+        COALESCE(SUM(ingreso_total), 0) as total_ingresos,
+        COUNT(*) as total_solicitudes
+      FROM solicitudes 
+      WHERE date(fecha_solicitud) BETWEEN date(?) AND date(?)
+      AND estado = 'finalizada'
+    ''', [
+      inicioSemana.toIso8601String().split('T')[0],
+      finSemana.toIso8601String().split('T')[0]
+    ]);
+    
+    final totalIngresos = (ingresos[0]['total_ingresos'] as num).toDouble();
+    final totalSolicitudes = (ingresos[0]['total_solicitudes'] as num).toInt();
+    
+    await db.execute('''
+      INSERT OR REPLACE INTO ingresos_semanales 
+      (anio, semana, fecha_inicio, fecha_fin, total_ingresos, total_solicitudes)
+      VALUES (?, ?, ?, ?, ?, ?)
+    ''', [
+      fecha.year,
+      numeroSemana,
+      inicioSemana.toIso8601String().split('T')[0],
+      finSemana.toIso8601String().split('T')[0],
+      totalIngresos,
+      totalSolicitudes
+    ]);
   }
 
   Future<void> _actualizarEstadisticasMensuales(DatabaseExecutor db, DateTime fecha) async {
@@ -326,7 +426,7 @@ class DatabaseHelper {
         
         await txn.update(
           'cuartos',
-          {'estado': 'disponible'},
+          {'estado': 'limpieza'},
           where: 'id = ?',
           whereArgs: [cuartoId],
         );
@@ -334,6 +434,7 @@ class DatabaseHelper {
         // AHORA txn ES UN DatabaseExecutor - FUNCIONA CORRECTAMENTE
         final fechaHoy = DateTime.now().toIso8601String().split('T')[0];
         await _actualizarIngresosDiarios(txn, fechaHoy);
+        await _actualizarIngresosSemanales(txn, DateTime.now());
         await _actualizarEstadisticasMensuales(txn, DateTime.now());
       }
     });
@@ -380,6 +481,21 @@ class DatabaseHelper {
     ''');
   }
 
+  Future<List<Map<String, dynamic>>> getIngresosSemanales({int? ultimasSemanas}) async {
+    final db = await database;
+    
+    String whereClause = '';
+    if (ultimasSemanas != null) {
+      whereClause = "WHERE fecha_inicio >= date('now', '-${ultimasSemanas * 7} days')";
+    }
+    
+    return await db.rawQuery('''
+      SELECT * FROM ingresos_semanales 
+      $whereClause
+      ORDER BY anio DESC, semana DESC
+    ''');
+  }
+
   Future<List<Map<String, dynamic>>> getEstadisticasMensuales({int? ultimosMeses}) async {
     final db = await database;
     
@@ -399,7 +515,6 @@ class DatabaseHelper {
     ''');
   }
 
-
   Future<List<Map<String, dynamic>>> getCuartosDisponibles() async {
     final db = await database;
     return await db.query(
@@ -410,16 +525,22 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getCuartosEnUso() async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT c.*, s.fecha_inicio, s.horas_totales, s.dias_totales, s.ingreso_total, s.modalidad_pago
-      FROM cuartos c 
-      LEFT JOIN solicitudes s ON c.id = s.cuarto_id AND s.estado = 'activa'
-      WHERE c.estado = 'ocupado'
-      ORDER BY CAST(c.numero AS INTEGER)
-    ''');
-  }
+Future<List<Map<String, dynamic>>> getCuartosEnUso() async {
+  final db = await database;
+  return await db.rawQuery('''
+    SELECT c.*, 
+           s.fecha_inicio, 
+           s.horas_totales, 
+           s.dias_totales, 
+           s.ingreso_total, 
+           s.modalidad_pago,
+           s.id as solicitud_id
+    FROM cuartos c 
+    LEFT JOIN solicitudes s ON c.id = s.cuarto_id AND s.estado = 'activa'
+    WHERE c.estado = 'ocupado'
+    ORDER BY CAST(c.numero AS INTEGER)
+  ''');
+}
 
   Future<List<Map<String, dynamic>>> getSolicitudesActivas() async {
     final db = await database;
@@ -430,6 +551,17 @@ class DatabaseHelper {
       WHERE s.estado = 'activa'
       ORDER BY s.fecha_inicio DESC
     ''');
+  }
+
+  Future<void> finalizarLimpiezaMantenimiento(int cuartoId) async {
+    final db = await database;
+    
+    await db.update(
+      'cuartos',
+      {'estado': 'disponible'},
+      where: 'id = ?',
+      whereArgs: [cuartoId],
+    );
   }
 
   Future<void> closeDatabase() async {

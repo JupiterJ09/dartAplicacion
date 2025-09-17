@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'home_screen.dart';
-import 'menu_screen.dart';
-import 'configuracion_screen.dart';
 import 'graficas_screen.dart';
 import 'costos_screen.dart';
 import 'en_uso_screen.dart';
 import 'libres_screen.dart';
 import 'mantenimiento_screen.dart';
 import 'historial_screen.dart';
+import 'registro_habitacion.dart'; 
+import 'lista_gastos_screen.dart';
+import 'package:flutter/services.dart'; // para SystemNavigator
 
 class MainScreen extends StatefulWidget {
   @override
@@ -19,50 +20,55 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   String _currentSection = 'home';
 
-@override
-Widget build(BuildContext context) {
-  return PopScope(
-    canPop: false,
-    onPopInvokedWithResult: (bool didPop, Object? result) async {
-      if (!didPop) {
-        final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.of(context).pop();
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        if (!didPop) {
+          final shouldPop = await _onWillPop();
+          if (shouldPop && context.mounted) {
+            Navigator.of(context).pop();
+          }
         }
-      }
-    },
-    child: Scaffold(
-      body: _getCurrentScreen(),
-      bottomNavigationBar: _buildBottomNav(),
-    ),
-  );
-}
-
-  Future<bool> _onWillPop() async {
-    if (_currentSection != 'home') {
-      _navigateToSection('home');
-      return false;
-    }
-
-    return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Salir'),
-            content: Text('¿Quieres salir de la app?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('si'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+      },
+      child: Scaffold(
+        body: _getCurrentScreen(),
+        bottomNavigationBar: _buildBottomNav(),
+      ),
+    );
   }
+
+Future<bool> _onWillPop() async {
+  if (_currentSection != 'home') {
+    _navigateToSection('home');
+    return false;
+  }
+
+  final shouldExit = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Salir'),
+          content: Text('¿Quieres salir de la app?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Sí'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+  if (shouldExit) {
+    SystemNavigator.pop();     // cierra la app correctamente
+    return false;              // evita un pop extra que dejaría pantalla negra
+  }
+  return false;
+}
 
   Widget _getCurrentScreen() {
     switch (_currentSection) {
@@ -76,14 +82,16 @@ Widget build(BuildContext context) {
         return MantenimientoScreen(onNavigate: _navigateToSection);
       case 'historial':
         return HistorialScreen(onNavigate: _navigateToSection);
-      case 'menu':
-        return MenuScreen(onNavigate: _navigateToSection);
-      case 'configuracion':
-        return ConfiguracionScreen(onNavigate: _navigateToSection);
       case 'graficas':
         return GraficasScreen(onNavigate: _navigateToSection);
       case 'costos':
         return CostosScreen(onNavigate: _navigateToSection);
+      case 'registro':
+       return RegistroScreen(onNavigate: _navigateToSection);
+        break;
+        case 'lista_gastos':
+       return ListaGastosScreen(onNavigate: _navigateToSection);
+        break;
       default:
         return HomeScreen(onNavigate: _navigateToSection);
     }
@@ -99,12 +107,14 @@ Widget build(BuildContext context) {
           _currentIndex = 0;
           break;
         case 'en_uso':
-         _currentIndex = 1;
-         break;
+          _currentIndex = 1;
+          break;
         case 'libres':
-        _currentIndex = 2;
-        break;
+          _currentIndex = 2;
+          break;
         case 'mantenimiento':
+          _currentIndex = 3;
+          break;
         case 'historial':
           break;
         default:
@@ -143,7 +153,7 @@ Widget build(BuildContext context) {
               _buildBottomNavItem(Icons.home, 0, 'home'),
               _buildBottomNavItem(Icons.people, 1, 'en_uso'),
               _buildBottomNavItem(Icons.meeting_room_outlined, 2, 'libres'),
-              _buildBottomNavItem(Icons.settings, 3, 'menu'),
+              _buildBottomNavItem(Icons.build, 3, 'mantenimiento'),
             ],
           ),
         ),

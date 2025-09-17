@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 
-class HistorialScreen extends StatefulWidget {
+class ListaGastosScreen extends StatefulWidget {
   final Function(String) onNavigate;
 
-  const HistorialScreen({Key? key, required this.onNavigate}) : super(key: key);
+  const ListaGastosScreen({Key? key, required this.onNavigate}) : super(key: key);
 
   @override
-  State<HistorialScreen> createState() => _HistorialScreenState();
+  State<ListaGastosScreen> createState() => _ListaGastosScreenState();
 }
 
-class _HistorialScreenState extends State<HistorialScreen> {
+class _ListaGastosScreenState extends State<ListaGastosScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    
+
     return Scaffold(
-      backgroundColor: Colors.green[600],
+      backgroundColor: Colors.orange[600],
       body: SafeArea(
         child: Column(
           children: [
@@ -29,7 +29,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => widget.onNavigate('home'),
+                    onPressed: () => widget.onNavigate('costos'),
                     icon: Icon(
                       Icons.arrow_back,
                       color: Colors.white,
@@ -39,7 +39,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   SizedBox(width: isTablet ? 16 : 8),
                   Expanded(
                     child: Text(
-                      'Historial de Solicitudes',
+                      'Lista de Gastos',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: isTablet ? 28 : 20,
@@ -47,6 +47,37 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       ),
                     ),
                   ),
+                  // Botón para agregar nuevo gasto
+                  ElevatedButton.icon(
+                    onPressed: () => widget.onNavigate('costos'),
+                    icon: Icon(
+                      Icons.add,
+                      size: isTablet ? 20 : 18,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      'Nuevo Gasto',
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[600],
+                      foregroundColor: Colors.white,
+                      elevation: 4,
+                      shadowColor: Colors.green[200],
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 16 : 12,
+                        vertical: isTablet ? 12 : 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
                   IconButton(
                     onPressed: () {
                       setState(() {}); // Refrescar datos
@@ -60,17 +91,17 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 ],
               ),
             ),
-            
+
             // Estadísticas rápidas
             Container(
               margin: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),
               padding: EdgeInsets.all(isTablet ? 16 : 12),
               decoration: BoxDecoration(
-                color: Colors.green[400],
+                color: Colors.orange[400],
                 borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
               ),
               child: FutureBuilder<Map<String, dynamic>>(
-                future: _getEstadisticasRapidas(),
+                future: _getEstadisticasGastos(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final stats = snapshot.data!;
@@ -78,21 +109,21 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildStatItem(
-                          'Total Solicitudes',
+                          'Total Gastos',
                           '${stats['total']}',
                           Icons.receipt_long,
                           isTablet,
                         ),
                         _buildStatItem(
-                          'Ingresos Total',
-                          '\$${stats['ingresos'].toStringAsFixed(0)}',
+                          'Monto Total',
+                          '\$${stats['monto_total'].toStringAsFixed(0)}',
                           Icons.attach_money,
                           isTablet,
                         ),
                         _buildStatItem(
                           'Promedio',
                           '\$${stats['promedio'].toStringAsFixed(0)}',
-                          Icons.trending_up,
+                          Icons.analytics,
                           isTablet,
                         ),
                       ],
@@ -102,15 +133,15 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 },
               ),
             ),
-            
+
             SizedBox(height: isTablet ? 16 : 12),
-            
-            // Tabla Header
+
+            // Header de la tabla
             Container(
               margin: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),
               padding: EdgeInsets.all(isTablet ? 16 : 12),
               decoration: BoxDecoration(
-                color: Colors.green[400],
+                color: Colors.orange[400],
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(isTablet ? 16 : 12),
                   topRight: Radius.circular(isTablet ? 16 : 12),
@@ -121,7 +152,19 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'Cuarto',
+                      'Fecha',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: isTablet ? 16 : 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      'Descripción',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -133,31 +176,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'Fecha/Hora',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: isTablet ? 16 : 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Duración',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: isTablet ? 16 : 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      'Total',
+                      'Monto',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -169,8 +188,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 ],
               ),
             ),
-            
-            // Lista de solicitudes
+
+            // Lista de gastos
             Expanded(
               child: Container(
                 margin: EdgeInsets.fromLTRB(
@@ -187,14 +206,14 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   ),
                 ),
                 child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _getSolicitudesTerminadas(),
+                  future: _getTodosLosGastos(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(),
                       );
                     }
-                    
+
                     if (snapshot.hasError) {
                       return Center(
                         child: Column(
@@ -207,7 +226,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                             ),
                             SizedBox(height: isTablet ? 16 : 12),
                             Text(
-                              'Error al cargar historial',
+                              'Error al cargar gastos',
                               style: TextStyle(
                                 fontSize: isTablet ? 18 : 16,
                                 color: Colors.red[600],
@@ -226,22 +245,22 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         ),
                       );
                     }
-                    
-                    final solicitudes = snapshot.data ?? [];
-                    
-                    if (solicitudes.isEmpty) {
+
+                    final gastos = snapshot.data ?? [];
+
+                    if (gastos.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.history,
+                              Icons.receipt_long_outlined,
                               size: isTablet ? 80 : 64,
                               color: Colors.grey[400],
                             ),
                             SizedBox(height: isTablet ? 24 : 16),
                             Text(
-                              'No hay solicitudes terminadas',
+                              'No hay gastos registrados',
                               style: TextStyle(
                                 fontSize: isTablet ? 24 : 18,
                                 fontWeight: FontWeight.bold,
@@ -250,7 +269,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                             ),
                             SizedBox(height: isTablet ? 12 : 8),
                             Text(
-                              'Las solicitudes finalizadas aparecerán aquí',
+                              'Presiona "Nuevo Gasto" para registrar el primero',
                               style: TextStyle(
                                 fontSize: isTablet ? 16 : 14,
                                 color: Colors.grey[500],
@@ -261,13 +280,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         ),
                       );
                     }
-                    
+
                     return ListView.builder(
                       padding: EdgeInsets.zero,
-                      itemCount: solicitudes.length,
+                      itemCount: gastos.length,
                       itemBuilder: (context, index) {
-                        final solicitud = solicitudes[index];
-                        return _buildHistorialRow(solicitud, index, isTablet);
+                        final gasto = gastos[index];
+                        return _buildGastoRow(gasto, index, isTablet);
                       },
                     );
                   },
@@ -309,52 +328,26 @@ class _HistorialScreenState extends State<HistorialScreen> {
     );
   }
 
-  Widget _buildHistorialRow(Map<String, dynamic> solicitud, int index, bool isTablet) {
-    final numero = solicitud['numero']?.toString() ?? 'S/N';
-    final tipo = solicitud['tipo_habitacion']?.toString() ?? 'Cuarto';
-    final ingresoTotal = (solicitud['ingreso_total'] as num?)?.toDouble() ?? 0.0;
-    final fechaSolicitud = solicitud['fecha_solicitud']?.toString() ?? '';
-    final modalidad = solicitud['modalidad_pago']?.toString() ?? '';
-    final horas = solicitud['horas_totales'] as int?;
-    final dias = solicitud['dias_totales'] as int?;
-    
-    // Formatear fecha y hora
+  Widget _buildGastoRow(Map<String, dynamic> gasto, int index, bool isTablet) {
+    final monto = (gasto['monto'] as num?)?.toDouble() ?? 0.0;
+    final descripcion = gasto['descripcion']?.toString() ?? 'Sin descripción';
+    final fechaString = gasto['fecha']?.toString() ?? '';
+
+    // Formatear fecha
     String fechaFormateada = '';
-    String horaFormateada = '';
-    String duracionFormateada = '';
-    
-    if (fechaSolicitud.isNotEmpty) {
+    if (fechaString.isNotEmpty) {
       try {
-        final fecha = DateTime.parse(fechaSolicitud);
-        fechaFormateada = '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}';
-        horaFormateada = '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}';
+        final fecha = DateTime.parse(fechaString);
+        fechaFormateada = '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year}';
       } catch (e) {
-        fechaFormateada = '--/--';
-        horaFormateada = '--:--';
+        fechaFormateada = fechaString;
       }
     }
-    
-    // Formatear duración
-    if (modalidad == 'por_hora' && horas != null) {
-      duracionFormateada = '${horas}h';
-    } else if (modalidad == 'por_dia' && dias != null) {
-      duracionFormateada = '${dias}d';
-    } else if (modalidad == 'personalizado') {
-      if (horas != null && horas > 0) {
-        duracionFormateada = '${horas}h (pers.)';
-      } else if (dias != null && dias > 0) {
-        duracionFormateada = '${dias}d (pers.)';
-      } else {
-        duracionFormateada = 'Personalizado';
-      }
-    } else {
-      duracionFormateada = modalidad.replaceAll('_', ' ');
-    }
-    
+
     return Container(
       padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
-        color: index % 2 == 0 ? Colors.green[50] : Colors.white,
+        color: index % 2 == 0 ? Colors.orange[50] : Colors.white,
         border: Border(
           bottom: BorderSide(
             color: Colors.grey[200]!,
@@ -366,65 +359,38 @@ class _HistorialScreenState extends State<HistorialScreen> {
         children: [
           Expanded(
             flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '$tipo $numero',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isTablet ? 16 : 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  fechaFormateada,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isTablet ? 14 : 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  horaFormateada,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isTablet ? 12 : 10,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
             child: Text(
-              duracionFormateada,
+              fechaFormateada,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: isTablet ? 14 : 12,
-                color: Colors.blue[700],
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           Expanded(
-            flex: 1,
+            flex: 4,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                descripcion,
+                style: TextStyle(
+                  fontSize: isTablet ? 14 : 12,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
             child: Text(
-              '\$${ingresoTotal.toStringAsFixed(0)}',
+              '\$${monto.toStringAsFixed(0)}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: isTablet ? 16 : 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[700],
+                color: Colors.orange[700],
               ),
             ),
           ),
@@ -432,60 +398,46 @@ class _HistorialScreenState extends State<HistorialScreen> {
       ),
     );
   }
-  
-  Future<List<Map<String, dynamic>>> _getSolicitudesTerminadas() async {
+
+  Future<List<Map<String, dynamic>>> _getTodosLosGastos() async {
     try {
       final db = await _dbHelper.database;
-      
-      final result = await db.rawQuery('''
-        SELECT 
-          s.id,
-          s.cuarto_id,
-          s.modalidad_pago,
-          s.precio_aplicado,
-          s.horas_totales,
-          s.dias_totales,
-          s.ingreso_total,
-          s.fecha_inicio,
-          s.fecha_fin,
-          s.fecha_solicitud,
-          s.estado,
-          c.numero,
-          c.tipo_habitacion
-        FROM solicitudes s
-        JOIN cuartos c ON s.cuarto_id = c.id
-        WHERE s.estado = 'finalizada'
-        ORDER BY s.fecha_solicitud DESC
-      ''');
-      
+
+      final result = await db.query(
+        'gastos',
+        orderBy: 'fecha DESC, created_at DESC',
+      );
+
+      print('Gastos encontrados: ${result.length}');
       return result;
     } catch (e) {
+      print('Error al obtener gastos: $e');
       rethrow;
     }
   }
-  
-  Future<Map<String, dynamic>> _getEstadisticasRapidas() async {
+
+  Future<Map<String, dynamic>> _getEstadisticasGastos() async {
     try {
       final db = await _dbHelper.database;
-      
+
       final result = await db.rawQuery('''
         SELECT 
           COUNT(*) as total,
-          COALESCE(SUM(ingreso_total), 0) as ingresos,
-          COALESCE(AVG(ingreso_total), 0) as promedio
-        FROM solicitudes
-        WHERE estado = 'finalizada'
+          COALESCE(SUM(monto), 0) as monto_total,
+          COALESCE(AVG(monto), 0) as promedio
+        FROM gastos
       ''');
-      
+
       return {
         'total': (result[0]['total'] as num).toInt(),
-        'ingresos': (result[0]['ingresos'] as num).toDouble(),
+        'monto_total': (result[0]['monto_total'] as num).toDouble(),
         'promedio': (result[0]['promedio'] as num).toDouble(),
       };
     } catch (e) {
+      print('Error al obtener estadísticas de gastos: $e');
       return {
         'total': 0,
-        'ingresos': 0.0,
+        'monto_total': 0.0,
         'promedio': 0.0,
       };
     }
